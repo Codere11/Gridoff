@@ -1,0 +1,17 @@
+.map {
+    position: absolute; /* Makes sure it isn't limited */
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .tile {
+    position: absolute;
+    background-size: cover;
+  }
+  
+  .player {
+    position: absolute;
+    background-size: cover;
+  }
+  

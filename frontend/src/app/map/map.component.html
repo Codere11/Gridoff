@@ -1,0 +1,10 @@
+<div class="map">
+    <div *ngFor="let row of map; let y = index">
+      <div *ngFor="let tile of row; let x = index"
+           class="tile"
+           [ngStyle]="getTileStyle(x, y)">
+      </div>
+    </div>
+    <div class="player" [ngStyle]="getPlayerStyle()"></div>
+  </div>
+  
