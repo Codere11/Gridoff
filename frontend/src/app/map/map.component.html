@@ -20,12 +20,13 @@
       <p> | Money: {{ money }}</p>
     </div>
 
-    <div *ngIf="showInventory" class="inventory">
-        <div *ngFor="let item of inventoryItems" class="inventory-slot">
-          <img *ngIf="item.icon" [src]="item.icon" [alt]="item.name" class="inventory-icon">
-          <span *ngIf="item.count > 0" class="inventory-count">{{ item.count }}</span>
-        </div>
-      </div>      
+    <div class="inventory" *ngIf="buildMode">
+      <div *ngFor="let item of inventoryItems" class="inventory-slot" (click)="selectTile(item.type)">
+        <img class="inventory-icon" [src]="item.icon" [alt]="item.name">
+      </div>
+    </div>
+    
+        
 
   </div>
   

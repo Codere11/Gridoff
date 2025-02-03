@@ -14,6 +14,9 @@ export class MapComponent implements OnInit {
   health = 100;
   money = 0;
   showHUD = true;
+  buildMode = true; // ✅ Enables/disables build mode
+  equippedTile = 'grass'; // ✅ Default selected tile
+
 
   spriteFrame = 0; // Keeps track of the frame
   spritePosition = '0px 0px'; // Default starting frame position
@@ -28,11 +31,16 @@ export class MapComponent implements OnInit {
   constructor() {}
 
   inventoryItems = [
-    { name: 'Tobacco Seeds', icon: '../../assets/icons/tobacco-seeds.png', count: 5 },
-    { name: 'Harvested Tobacco', icon: 'assets/icons/harvested-tobacco.png', count: 0 },
-    { name: 'Watering Can', icon: '../../assets/icons/watering-can.png', count: 1 },
-    { name: 'Shovel', icon: '../../assets/icons/shovel.png', count: 1 },
+    { name: 'Grass', type: 'grass', icon: '../../assets/tiles/grass.png' },
+    { name: 'Dirt', type: 'dirt-3', icon: '../../assets/tiles/dirt-3.png' },
+    { name: 'House', type: 'house-1', icon: '../../assets/icons/house-1.png' },
+    { name: 'Tree', type: 'tree-tile', icon: '../../assets/tiles/tree-tile.png' },
+    { name: 'Homestead', type: 'homestead', icon: '../../assets/tiles/homestead.png' },
+    { name: 'Road-LR', type: 'road-lr', icon: '../../assets/tiles/road-lr.png' },
+    { name: 'Road-TD', type: 'road-td', icon: '../../assets/tiles/road-td.png' },
+    { name: 'Ocean', type: 'ocean', icon: '../../assets/tiles/ocean.png' },
   ];
+  
   
   showInventory = true;
   
@@ -48,36 +56,75 @@ export class MapComponent implements OnInit {
     );
   }
 
+  onTileClick(x: number, y: number) {
+    if (this.buildMode && this.equippedTile) {  // ✅ Ensure build mode is on and a tile is equipped
+      console.log(`Placing ${this.equippedTile} at (${x}, ${y})`);
+      this.map[y][x].type = this.equippedTile; // ✅ Update tile type
+    }
+  }
+  
+  
+  
+  selectTile(tileType: string) {
+    this.equippedTile = tileType;
+    console.log(`Equipped tile: ${tileType}`); // ✅ Debugging to check if it updates
+  }
+  
+  
+
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
     if (event.key === 'w') this.movePlayer(0, -0.5);
     if (event.key === 's') this.movePlayer(0, 0.5);
     if (event.key === 'a') this.movePlayer(-0.5, 0);
     if (event.key === 'd') this.movePlayer(0.5, 0);
+
+    if (event.key === 'e') this.exportWorld(); // ✅ Press 'E' to export map
   }
 
-  movePlayer(dx: number, dy: number) {
-    this.player.x = Math.max(0, Math.min(this.worldSize - 1, this.player.x + dx));
-    this.player.y = Math.max(0, Math.min(this.worldSize - 1, this.player.y + dy));
+
+  exportWorld() {
+    const exportedMap = this.map.map(row => row.map(tile => `"${tile.type}"`));
+    console.log(`[ \n ${exportedMap.map(row => `[${row.join(', ')}]`).join(',\n')} \n]`);
+  }
   
+
+
+  movePlayer(dx: number, dy: number) {
+    const newX = this.player.x + dx;
+    const newY = this.player.y + dy;
+  
+    // ✅ Prevent movement if the target tile doesn't exist or is out of bounds
+    if (
+      newX < 0 || newY < 0 || 
+      newX >= this.map[0].length || newY >= this.map.length || 
+      !this.map[Math.floor(newY)] || !this.map[Math.floor(newY)][Math.floor(newX)]
+    ) {
+      return; // Prevent movement if out of bounds
+    }
+  
+    this.player.x = newX;
+    this.player.y = newY;
+    
     this.spriteFrame = (this.spriteFrame + 1) % 2; // Toggle between two frames
   
-    if (dx > 0) {  // Moving Right
+    if (dx > 0) {  
       this.lastDirection = 'right';
       this.spritePosition = `-${this.spriteFrame * 128}px 0px`;
-    } else if (dx < 0) {  // Moving Left
+    } else if (dx < 0) {  
       this.lastDirection = 'left';
       this.spritePosition = `-${this.spriteFrame * 128}px 0px`;
-    } else if (dy < 0) {  // Moving Up
+    } else if (dy < 0) {  
       this.lastDirection = 'up';
       this.spritePosition = `-${this.spriteFrame * 128}px -128px`;
-    } else if (dy > 0) {  // Moving Down
+    } else if (dy > 0) {  
       this.lastDirection = 'down';
-      this.spritePosition = `-${this.spriteFrame * 128}px  -128px`;
+      this.spritePosition = `-${this.spriteFrame * 128}px -128px`;
     }
   
     this.updateCamera();
   }
+  
   
 
   updateCamera() {
@@ -107,31 +154,19 @@ export class MapComponent implements OnInit {
   
 
   getTileStyle(x: number, y: number) {
+    const tileExists = this.map[y] && this.map[y][x];
+    const tileType = tileExists ? this.map[y][x].type : 'ocean'; // ✅ Default to ocean
+  
     return {
       position: 'absolute',
       left: `${(x - this.cameraX) * this.tileSize}px`,
       top: `${(y - this.cameraY) * this.tileSize}px`,
-      backgroundImage: `url('../../assets/tiles/${this.map[y][x].type}.png')`,
+      backgroundImage: `url('../../assets/tiles/${tileType}.png')`,
       backgroundSize: 'cover',
       width: `${this.tileSize}px`,
       height: `${this.tileSize}px`,
       zIndex: '10'
     };
-  }
-
-  onTileClick(x: number, y: number) {
-    const tile = this.map[y][x];
-    if (tile.type === 'grass') {
-      tile.type = 'tobacco-1';
-      tile.growthStage = 1;
-      this.startGrowthTimer(x, y);
-    } else if (tile.type === 'tobacco-3') {
-      this.tobaccoCount++;
-      tile.type = 'grass';
-      tile.growthStage = 0;
-      this.showHUD = true;
-      setTimeout(() => this.showHUD = true, 2000);
-    }
   }
 
   startGrowthTimer(x: number, y: number) {

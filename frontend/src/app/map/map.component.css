@@ -50,30 +50,33 @@
     left: 50%;
     transform: translateX(-50%);
     display: flex;
+    gap: 8px; /* ✅ Creates spacing between slots */
     align-items: center;
     justify-content: center;
     background: rgba(0, 0, 0, 0.8);
     border-radius: 10px;
     padding: 10px;
     z-index: 100;
-    min-width: 300px;
-    height: 140px;
+    min-width: auto; /* ✅ Auto-size to fit content */
+    height: 80px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
 }
 
+
 .inventory-slot {
-    width: 100px;
-    height: 100px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 64px;  /* ✅ Fix to standard size */
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    margin: 0 5px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 5px;
     transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    overflow: hidden; /* ✅ Prevents oversized images */
 }
+
 
 .inventory-slot:hover {
     border-color: white;
@@ -81,9 +84,13 @@
 }
 
 .inventory-icon {
-    width: 80%;
-    height: auto;
+    width: 48px;  /* ✅ Fixes icon size */
+    height: 48px;
+    object-fit: contain;
+    display: block;
 }
+
+
 
 .inventory-count {
     position: absolute;

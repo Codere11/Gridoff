@@ -3,6 +3,7 @@ html, body, app-root, app-map {
     padding: 0;
     width: 100vw;
     height: 100vh;
+    background-image: url('../assets/tiles/ocean.png');
     overflow: hidden;
     display: flex;
     justify-content: center;
