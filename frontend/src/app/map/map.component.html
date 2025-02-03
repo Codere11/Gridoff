@@ -1,10 +1,31 @@
-<div class="map">
-    <div *ngFor="let row of map; let y = index">
-      <div *ngFor="let tile of row; let x = index"
-           class="tile"
-           [ngStyle]="getTileStyle(x, y)">
+<div class="game-container">
+    <!-- Game Map -->
+    <div class="map">
+      <div 
+        *ngFor="let row of map; let y = index">
+        <div 
+          *ngFor="let tile of row; let x = index"
+          [ngStyle]="getTileStyle(x, y)"
+          (click)="onTileClick(x, y)">
+        </div>
       </div>
     </div>
+  
+    <!-- Player -->
     <div class="player" [ngStyle]="getPlayerStyle()"></div>
+  
+    <!-- HUD (Tobacco Count) -->
+    <div *ngIf="showHUD" class="stats">
+      <p> Health: {{ health }} |</p>
+      <p> | Money: {{ money }}</p>
+    </div>
+
+    <div *ngIf="showInventory" class="inventory">
+        <div *ngFor="let item of inventoryItems" class="inventory-slot">
+          <img *ngIf="item.icon" [src]="item.icon" [alt]="item.name" class="inventory-icon">
+          <span *ngIf="item.count > 0" class="inventory-count">{{ item.count }}</span>
+        </div>
+      </div>      
+
   </div>
   

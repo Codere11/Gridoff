@@ -9,105 +9,99 @@ import { Component, HostListener, OnInit } from '@angular/core';
 })
 export class MapComponent implements OnInit {
   tileSize = 128; 
-  chunkSize = 10;
   worldSize = 50;
+  tobaccoCount = 0;
+  health = 100;
+  money = 0;
+  showHUD = true;
 
-  map: string[][] = [];
-  player = { x: 5, y: 5, smoothX: 1, smoothY: 1 }; // smoothX & smoothY for interpolation
+  spriteFrame = 0; // Keeps track of the frame
+  spritePosition = '0px 0px'; // Default starting frame position
+  lastDirection = 'right'; // Track direction to determine animation
+
+
+  map: { type: string, growthStage: number }[][] = [];
+  player = { x: 20, y: 10 };
   cameraX = 0;
   cameraY = 0;
 
-  movementSpeed = 0.1; // Adjust for smooth movement
-  keysPressed: Record<string, boolean> = {};
-
-  chunkMap: Record<string, string> = {
-    '0': 'grass',
-    '1': 'ocean',
-    '2': 'dirt-3',
-    '3': 'tobacco-2'
-  };
-
   constructor() {}
+
+  inventoryItems = [
+    { name: 'Tobacco Seeds', icon: '../../assets/icons/tobacco-seeds.png', count: 5 },
+    { name: 'Harvested Tobacco', icon: 'assets/icons/harvested-tobacco.png', count: 0 },
+    { name: 'Watering Can', icon: '../../assets/icons/watering-can.png', count: 1 },
+    { name: 'Shovel', icon: '../../assets/icons/shovel.png', count: 1 },
+  ];
+  
+  showInventory = true;
+  
 
   ngOnInit() {
     this.generateMap();
     this.updateCamera();
-    this.gameLoop(); // Start the game loop for smooth movement
   }
 
   generateMap() {
-    this.map = Array.from({ length: this.worldSize }, (_, y) =>
-      Array.from({ length: this.worldSize }, (_, x) => {
-        const chunkX = Math.floor(x / this.chunkSize);
-        const chunkY = Math.floor(y / this.chunkSize);
-        const chunkType = ((chunkX + chunkY) % 4).toString();
-        return this.chunkMap[chunkType];
-      })
+    this.map = Array.from({ length: this.worldSize }, () =>
+      Array.from({ length: this.worldSize }, () => ({ type: 'grass', growthStage: 0 }))
     );
   }
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
-    if (['w', 'a', 's', 'd'].includes(event.key)) {
-      this.keysPressed[event.key] = true;
-    }
+    if (event.key === 'w') this.movePlayer(0, -0.5);
+    if (event.key === 's') this.movePlayer(0, 0.5);
+    if (event.key === 'a') this.movePlayer(-0.5, 0);
+    if (event.key === 'd') this.movePlayer(0.5, 0);
   }
-
-  @HostListener('window:keyup', ['$event'])
-  handleKeyUp(event: KeyboardEvent) {
-    if (['w', 'a', 's', 'd'].includes(event.key)) {
-      this.keysPressed[event.key] = false;
-    }
-  }
-
-  gameLoop() {
-    setInterval(() => {
-      let dx = 0;
-      let dy = 0;
-  
-      if (this.keysPressed['w']) dy = -1;
-      if (this.keysPressed['s']) dy = 1;
-      if (this.keysPressed['a']) dx = -1;
-      if (this.keysPressed['d']) dx = 1;
-  
-      // ✅ Immediately change player movement direction
-      if (dx !== 0 || dy !== 0) {
-        this.movePlayer(dx, dy); // Pass `true` to reset smooth movement instantly
-      }
-  
-      this.smoothMove();
-      this.updateCamera();
-    }, 1000 / 60); // 60 FPS
-  }
-  
-  
-  smoothMove() {
-    this.player.smoothX += (this.player.x - this.player.smoothX) * this.movementSpeed;
-    this.player.smoothY += (this.player.y - this.player.smoothY) * this.movementSpeed;
-  }
-  
 
   movePlayer(dx: number, dy: number) {
-    const newX = Math.max(0, Math.min(this.worldSize - 1, this.player.x + dx));
-    const newY = Math.max(0, Math.min(this.worldSize - 1, this.player.y + dy));
-
-    if (newX !== this.player.x || newY !== this.player.y) {
-      this.player.x = newX;
-      this.player.y = newY;
-      this.updateCamera();
+    this.player.x = Math.max(0, Math.min(this.worldSize - 1, this.player.x + dx));
+    this.player.y = Math.max(0, Math.min(this.worldSize - 1, this.player.y + dy));
+  
+    this.spriteFrame = (this.spriteFrame + 1) % 2; // Toggle between two frames
+  
+    if (dx > 0) {  // Moving Right
+      this.lastDirection = 'right';
+      this.spritePosition = `-${this.spriteFrame * 128}px 0px`;
+    } else if (dx < 0) {  // Moving Left
+      this.lastDirection = 'left';
+      this.spritePosition = `-${this.spriteFrame * 128}px 0px`;
+    } else if (dy < 0) {  // Moving Up
+      this.lastDirection = 'up';
+      this.spritePosition = `-${this.spriteFrame * 128}px -128px`;
+    } else if (dy > 0) {  // Moving Down
+      this.lastDirection = 'down';
+      this.spritePosition = `-${this.spriteFrame * 128}px  -128px`;
     }
+  
+    this.updateCamera();
   }
-
   
 
   updateCamera() {
-    const visibleTilesX = Math.floor(window.innerWidth / this.tileSize);
-    const visibleTilesY = Math.floor(window.innerHeight / this.tileSize);
-  
-    // ✅ Smoothly move the camera to follow the player
-    this.cameraX += (this.player.smoothX - this.cameraX - Math.floor(visibleTilesX / 2)) * this.movementSpeed;
-    this.cameraY += (this.player.smoothY - this.cameraY - Math.floor(visibleTilesY / 2)) * this.movementSpeed;
+    const visibleTilesX = Math.ceil(window.innerWidth / this.tileSize);
+    const visibleTilesY = Math.ceil(window.innerHeight / this.tileSize);
+    
+    this.cameraX = Math.max(0, Math.min(this.worldSize - visibleTilesX, this.player.x - Math.floor(visibleTilesX / 2)));
+    this.cameraY = Math.max(0, Math.min(this.worldSize - visibleTilesY, this.player.y - Math.floor(visibleTilesY / 2)));
   }
+
+  getPlayerStyle() {
+    return {
+      position: 'absolute',
+      left: `${(this.player.x - this.cameraX) * this.tileSize}px`,
+      top: `${(this.player.y - this.cameraY) * this.tileSize}px`,
+      backgroundImage: "url('assets/sprites/player-movement.png')",
+      backgroundSize: "256px 256px",  // Ensure full size
+      backgroundPosition: this.spritePosition,
+      width: "128px",
+      height: "128px",
+      zIndex: '100'
+    };
+  }
+  
   
   
   
@@ -117,28 +111,37 @@ export class MapComponent implements OnInit {
       position: 'absolute',
       left: `${(x - this.cameraX) * this.tileSize}px`,
       top: `${(y - this.cameraY) * this.tileSize}px`,
-      backgroundImage: `url('../../assets/tiles/${this.map[y][x]}.png')`,
-      backgroundSize: 'cover',
-      width: `${this.tileSize}px`,
-      height: `${this.tileSize}px`
-    };
-  }
-  
-
-  getPlayerStyle() {
-    const visibleTilesX = Math.floor(window.innerWidth / this.tileSize);
-    const visibleTilesY = Math.floor(window.innerHeight / this.tileSize);
-  
-    return {
-      position: 'absolute',
-      left: `${Math.floor(visibleTilesX / 2) * this.tileSize}px`,
-      top: `${Math.floor(visibleTilesY / 2) * this.tileSize}px`,
-      backgroundImage: `url('../../assets/player.png')`,
+      backgroundImage: `url('../../assets/tiles/${this.map[y][x].type}.png')`,
       backgroundSize: 'cover',
       width: `${this.tileSize}px`,
       height: `${this.tileSize}px`,
       zIndex: '10'
     };
   }
-  
+
+  onTileClick(x: number, y: number) {
+    const tile = this.map[y][x];
+    if (tile.type === 'grass') {
+      tile.type = 'tobacco-1';
+      tile.growthStage = 1;
+      this.startGrowthTimer(x, y);
+    } else if (tile.type === 'tobacco-3') {
+      this.tobaccoCount++;
+      tile.type = 'grass';
+      tile.growthStage = 0;
+      this.showHUD = true;
+      setTimeout(() => this.showHUD = true, 2000);
+    }
+  }
+
+  startGrowthTimer(x: number, y: number) {
+    setTimeout(() => {
+      const tile = this.map[y][x];
+      if (tile.growthStage > 0 && tile.growthStage < 3) {
+        tile.growthStage++;
+        tile.type = `tobacco-${tile.growthStage}`;
+        this.startGrowthTimer(x, y);
+      }
+    }, 10000);
+  }
 }
