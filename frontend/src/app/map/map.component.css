@@ -4,16 +4,17 @@
     height: auto;
     min-width: 100vw;
     min-height: 100vh;
-    overflow: visible; /* Allow tiles to render outside */
+    overflow: hidden; /* Allow tiles to render outside */
 }
 
   
 .tile {
     position: absolute;
     background-size: cover;
-    margin:2px;
-    z-index: 10; /* Ensures tiles are below the player */
+    z-index: 10;
 }
+
+
   
 .player {
     width: 64px;  /* Single frame width */
