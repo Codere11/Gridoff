@@ -1,0 +1,49 @@
+<div class="game-container">
+  <!-- Game Map -->
+<div class="map">
+  <div *ngFor="let y of [].constructor(visibleTilesY); let rowIndex = index">
+    <div *ngFor="let x of [].constructor(visibleTilesX); let colIndex = index"
+         class="tile"
+         [ngStyle]="getTileStyle(cameraX + colIndex, cameraY + rowIndex)">
+    </div>
+  </div>
+</div>
+
+
+  
+  
+
+  <!-- Player -->
+  <div class="player" [ngStyle]="getPlayerStyle()"></div>
+
+  <!-- HUD (Health, Money) -->
+<div *ngIf="showHUD" class="stats">
+  <p> Health: {{ gameState.player.health }} |</p>
+  <p> | Money: {{ money }}</p>
+</div>
+
+<!-- Inventory -->
+<div class="inventory">
+  <div *ngFor="let item of inventoryItems" class="inventory-slot" (click)="equipWeapon(item.type)">
+    <img class="inventory-icon" [src]="item.icon" [alt]="item.name">
+  </div>
+</div>
+
+  
+<!-- Enemies -->
+<div *ngFor="let enemy of combatService.enemies" 
+     class="enemy"
+     [ngStyle]="getEnemyStyle(enemy)">
+  <p class="health-bar">❤️ {{ enemy.health }}</p>
+</div>
+
+
+<!-- Bullets -->
+<div *ngFor="let bullet of combatService.bullets" 
+     class="bullet"
+     [ngStyle]="getBulletStyle(bullet)">
+</div>
+
+
+
+</div>

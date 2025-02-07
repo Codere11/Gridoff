@@ -1,0 +1,21 @@
+.bullet {
+  position: absolute;
+  width: 20px;
+  height: 8px;
+  background-color: black;
+  border-radius: 5px;
+  z-index: 110;
+  transition: transform 0.1s linear; /* ✅ Smooth movement */
+}
+
+  
+  .enemy {
+    position: absolute;
+    width: 128px;
+    height: 128px;
+    background-image: url('assets/sprites/enemy.png'); /* ✅ Make sure the file exists */
+    background-size: cover;
+    background-position: center;
+    z-index: 99;
+  }
+  

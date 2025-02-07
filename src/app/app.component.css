@@ -1,0 +1,8 @@
+html, body, app-root, app-map {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('../assets/tiles/ocean.png');
+  overflow: hidden;
+}
