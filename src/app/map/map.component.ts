@@ -3,25 +3,12 @@ import { CommonModule } from '@angular/common';
 import { GameStateService } from '../services/game-state.service';
 import { CombatService } from '../services/combat.service';
 import { Bullet } from '../services/combat.service';
-import { InventoryService } from '../services/inventory.service';
-import { CdkDragDrop, CdkDropList, DragDropModule } from '@angular/cdk/drag-drop';
 
-interface Item {
-  id: number;
-  name: string;
-  type: string;
-  icon: string;
-}
-
-interface InventorySlot {
-  id: number;
-  item: Item | null;
-}
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [CommonModule, DragDropModule],
+  imports: [CommonModule],
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css']
 })
@@ -35,13 +22,11 @@ export class MapComponent implements OnInit {
   visibleTilesX = 0;
   visibleTilesY = 0;
 
-  inventorySlots = this.gameState.inventorySlots;
-
 
   // ✅ Expose missing properties from GameStateService
   get money() { return this.gameState.player.money; }
   get showHUD() { return this.gameState.showHUD; }
-  get inventoryItems() { return this.gameState.inventorySlots; }
+  get inventoryItems() { return this.gameState.inventoryItems; }
 
   ngOnInit() {
     this.updateCamera();
@@ -64,7 +49,8 @@ export class MapComponent implements OnInit {
       case 's': this.gameState.movePlayer(0, 0.5); break;
       case 'a': this.gameState.movePlayer(-0.5, 0); break;
       case 'd': this.gameState.movePlayer(0.5, 0); break;
-      case 'f': 
+      case ' ': 
+        console.log("🔫 Space Pressed: Shooting bullet...");
         this.combatService.fireBullet(); // ✅ Fix Bullet Firing
         this.gameState.updatePlayerAnimation(0, 0, true); // ✅ Shooting animation
         return;
@@ -76,16 +62,17 @@ export class MapComponent implements OnInit {
     this.updateCamera();
   }
 
-  @HostListener('click', ['$event'])
-  onClick(event: MouseEvent) {
-    const tileX = Math.floor((event.clientX / this.tileSize) + this.cameraX);
-    const tileY = Math.floor((event.clientY / this.tileSize) + this.cameraY);
+  @HostListener('window:mousedown', ['$event'])
+  handleMouseDown(event: MouseEvent) {
+  if (event.button === 0) { // Left mouse click
+    console.log("🖱 Left Click: Shooting bullet...");
+    
+    this.combatService.fireBullet(); // ✅ Ensure bullets actually fire
+    this.gameState.updatePlayerAnimation(0, 0, true); // ✅ Shooting animation
 
-    if(this.gameState.currentItem === 'ak47') {
-      this.combatService.fireBullet()
-    } else {
-      this.gameState.interactWithTile(tileX, tileY);
-    } 
+    // ✅ Prevents player direction from changing when shooting
+    event.preventDefault();  
+    }
   }
 
 
@@ -97,6 +84,7 @@ export class MapComponent implements OnInit {
   }
 
   updateGameLoop() {
+    console.log("🎮 Game Loop Running!");
     this.combatService.updateBullets(); // ✅ Moves bullets
     this.combatService.updateEnemies(); // ✅ Moves enemies
     requestAnimationFrame(() => this.updateGameLoop()); // ✅ Loops every frame
@@ -138,47 +126,7 @@ export class MapComponent implements OnInit {
     };
   }
 
-  equipItem(item: any | null) {
-    if (item && item.type) {
-      this.gameState.equipItem(item.type);
-    }
+  equipWeapon(weapon: string) {
+    this.gameState.equipWeapon(weapon);
   }
-  
-  selectedSlotIndex: number | null = null; // Track selected item slot
-
-  handleItemClick(index: number) {
-    const selectedSlot = this.inventorySlots[this.selectedSlotIndex ?? -1];
-    const clickedSlot = this.inventorySlots[index];
-
-    // Clicking an occupied slot first selects it
-    if (this.selectedSlotIndex === null && clickedSlot.item) {
-      this.selectedSlotIndex = index;
-      return;
-    }
-
-    // Clicking an empty slot moves the item
-    if (this.selectedSlotIndex !== null && !clickedSlot.item) {
-      this.inventorySlots[index].item = selectedSlot.item; // Move item to new slot
-      this.inventorySlots[this.selectedSlotIndex].item = null; // Clear original slot
-      this.selectedSlotIndex = null; // Deselect
-      return;
-    }
-
-    // Clicking another occupied slot swaps the items
-    if (this.selectedSlotIndex !== null && clickedSlot.item) {
-      const temp = clickedSlot.item;
-      this.inventorySlots[index].item = selectedSlot.item;
-      this.inventorySlots[this.selectedSlotIndex].item = temp;
-      this.selectedSlotIndex = null; // Deselect
-      return;
-    }
-
-    // Clicking the same slot again deselects it
-    if (this.selectedSlotIndex === index) {
-      this.selectedSlotIndex = null;
-    }
-  }
-  
-  
-
 }

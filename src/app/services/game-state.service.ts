@@ -1,21 +1,7 @@
-import { Injectable, IterableDiffers } from '@angular/core';
-
-
-interface Item {
-  id: number;
-  name: string;
-  type: string;
-  icon: string;
-}
-
-interface InventorySlot {
-  id: number;
-  item: Item | null;
-}
+import { Injectable } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
-  
 })
 export class GameStateService {
   tileSize = 128;
@@ -23,29 +9,15 @@ export class GameStateService {
 
   // --- Player State ---
   player = { x: 20, y: 20, health: 100, money: 0 };
-  currentItem: string | null = null;
+  currentWeapon: string | null = null;
   spriteFrame = 0;
   spritePosition = '0px 0px';
   lastDirection = 'right';
-  itemIdCounter = 0;
 
   // --- Inventory ---
-  
-  inventorySlots: InventorySlot[] = [
-      { id: 0, item: { id: this.itemIdCounter++, name: 'AK-47', type: 'ak47', icon: '../../assets/weapons/ak.png' } },
-      { id: 1, item: { id: this.itemIdCounter++, name: 'Shovel', type: 'shovel', icon: '../../assets/icons/shovel.png' } },
-      { id: 2, item: { id: this.itemIdCounter++, name: 'Watering Can', type: 'watering-can', icon: '../../assets/icons/watering-can.png' } },
-      { id: 3, item: { id: this.itemIdCounter++, name: 'Tobacco Seeds', type: 'tobacco-seeds', icon: '../../assets/icons/tobacco-seeds.png' } },
-      { id: 4, item: null }, // Empty slot
-      { id: 5, item: null },
-      { id: 6, item: null },
-      { id: 7, item: null },
-      { id: 8, item: null },
-      { id: 9, item: null }
+  inventoryItems = [
+    { name: 'AK-47', type: 'ak47', icon: '../../assets/weapons/ak.png' }
   ];
-  
-
-  
 
   // --- Map Data ---
   map: { type: string, growthStage: number }[][] = [];
@@ -57,9 +29,8 @@ export class GameStateService {
   }
 
   // --- Player Actions ---
-  equipItem(item: string) {
-    this.currentItem = item;
-    console.log(this.currentItem)
+  equipWeapon(weapon: string) {
+    this.currentWeapon = weapon;
   }
 
   movePlayer(dx: number, dy: number) {
@@ -95,7 +66,7 @@ export class GameStateService {
     }
   
     // If holding AK, use last movement direction for animation
-    if (this.currentItem === 'ak47') {
+    if (this.currentWeapon === 'ak47') {
       if (this.lastDirection === 'right') this.spritePosition = "0px 0px";
       if (this.lastDirection === 'left') this.spritePosition = "-128px 0px";
       if (this.lastDirection === 'up') this.spritePosition = "-128px -128px";
@@ -173,7 +144,7 @@ export class GameStateService {
   }
 
   getPlayerStyle(cameraX: number, cameraY: number) {
-    let sprite = this.currentItem === 'ak47'
+    let sprite = this.currentWeapon === 'ak47'
       ? "url('assets/sprites/ak-spritesheet.png')"
       : "url('assets/sprites/player-movement.png')";
 
@@ -204,35 +175,5 @@ export class GameStateService {
       height: `${this.tileSize}px`,
       zIndex: '10'
     };
-  }
-
-  interactWithTile(x: number, y: number) {
-    if (!this.map[y] || !this.map[y][x]) return;
-  
-    const tile = this.map[y][x];
-  
-    if (this.currentItem === 'shovel' && tile.type === 'grass') {
-      this.map[y][x] = { type: 'dirt', growthStage: 0 };
-    }
-    else  if (this.currentItem === 'watering-can' && tile.type === 'dirt') {
-      this.map[y][x] = { type: 'farmland', growthStage: 0 };
-    }
-    else if (this.currentItem === 'tobacco-seeds' && tile.type === 'farmland') {
-      this.map[y][x] = { type: 'tobacco-1', growthStage: 1};
-
-      if(this.map[y][x].type === 'tobacco-1')
-      setTimeout(() => {
-        this.map[y][x] = { type:'tobacco-2', growthStage:2};
-      }, 30000);
-        setTimeout(() => {
-          this.map[y][x] = { type: 'tobacco-3', growthStage: 3}
-        }, 60000)
-    }
-  }
-
-  harvestTile(x:number, y:number) {
-    if (!this.map[y] || this.map[x]) return;
-
-    const tile = this.map[y][x]
   }
 }

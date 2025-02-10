@@ -13,13 +13,10 @@ export class PlayerService {
 
   constructor(private mapService: MapService) {} // ✅ Inject MapService
 
-  currentItem: string | null = null;
+  currentWeapon: string | null = null;
 
-  equipItem(item: string) {
-    this.currentItem = item;
-    if(this.currentItem = item) {
-
-    }
+  equipWeapon(weapon: string) {
+    this.currentWeapon = weapon;
   }
 
 
@@ -64,7 +61,7 @@ export class PlayerService {
 
   // --- Get Player Style ---
   getPlayerStyle(cameraX: number, cameraY: number) {
-    let sprite = this.currentItem === 'ak47' 
+    let sprite = this.currentWeapon === 'ak47' 
       ? "url('assets/sprites/player-ak47.png')" 
       : "url('assets/sprites/player-movement.png')";
   

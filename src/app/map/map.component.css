@@ -7,12 +7,6 @@
     overflow: hidden; /* Allow tiles to render outside */
 }
 
-.inventory-slot.selected {
-    border: 2px solid rgb(247, 242, 238); /* ✅ Highlight effect */
-    background-color: rgb(194, 179, 179); /* ✅ Light yellow background */
-  }
-  
-
   
 .tile {
     position: absolute;
@@ -30,36 +24,6 @@
     background-position: 0px 0px;
 }
 
-.cdk-drag {
-    transition: none !important;
-    touch-action: none; /* Prevents accidental scroll issues */
-  }
-  
-  /* Make the dragged item move instantly */
-  .cdk-drag-preview {
-    transform: scale(1.2);
-    transition: none !important; /* Remove smooth animations */
-    will-change: transform;
-  }
-  
-  /* Prevents slow repositioning effect */
-  .cdk-drag-placeholder {
-    display: none;
-  }
-
-  /* Make empty slots look slightly faded */
-.inventory-slot.empty {
-    opacity: 0.4;
-    border: 2px dashed gray;
-  }
-  
-  /* Prevent empty slots from breaking the layout */
-  .inventory-slot img {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-  }
-  
   
 .stats {
     position: absolute;

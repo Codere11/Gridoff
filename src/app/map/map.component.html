@@ -22,17 +22,12 @@
   <p> | Money: {{ money }}</p>
 </div>
 
+<!-- Inventory -->
 <div class="inventory">
-  <div *ngFor="let slot of inventorySlots; let i = index" 
-       class="inventory-slot" 
-       [class.selected]="selectedSlotIndex === i"
-       (click)="handleItemClick(i)">
-
-    <img *ngIf="slot.item" class="inventory-icon" [src]="slot.item.icon" [alt]="slot.item.name">
+  <div *ngFor="let item of inventoryItems" class="inventory-slot" (click)="equipWeapon(item.type)">
+    <img class="inventory-icon" [src]="item.icon" [alt]="item.name">
   </div>
 </div>
-
-
 
   
 <!-- Enemies -->

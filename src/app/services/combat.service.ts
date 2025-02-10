@@ -10,128 +10,106 @@ export interface Bullet {
   lifetime: number;
 }
 
-export interface Enemy {
-  x: number;
-  y: number;
-  health: number;
-}
-
 @Injectable({
   providedIn: 'root'
 })
-export class CombatService {
-  private gameState = inject(GameStateService);
 
-  bullets: Bullet[] = [];
-  enemies: Enemy[] = [];
+export class CombatService {
+
+  gameState = inject(GameStateService);
+
+  bullets: Bullet[] = []
+  enemies: { x: number, y: number, health: number }[] = [];
 
   constructor() {
-    this.spawnEnemy(); // ✅ Spawns an enemy at start
+    this.spawnEnemy(); // ✅ Spawn an enemy at start
   }
 
-  // --- SPAWN AN ENEMY AT RANDOM LOCATION ---
+  // --- SPAWN AN ENEMY AT (5,5) ---
   spawnEnemy() {
-    if (!this.gameState) {
-      console.error("❌ `gameState` is undefined in `spawnEnemy`.");
-      return;
-    }
-
-    const x = Math.floor(Math.random() * this.gameState.worldSize);
-    const y = Math.floor(Math.random() * this.gameState.worldSize);
-
-    this.enemies.push({ x, y, health: 100 });
-    console.log(`👾 Enemy Spawned at (${x}, ${y})`);
+    this.enemies.push({ x: 5, y: 5, health: 100 });
+    console.log("👾 Enemy Spawned at (5,5):", this.enemies[0]);
   }
 
   // --- MOVE ENEMIES TOWARD PLAYER ---
   updateEnemies() {
-    if (!this.gameState || !this.gameState.player) return;
-
     this.enemies.forEach(enemy => {
-      if (enemy.x < this.gameState.player.x) enemy.x += 0.1;
-      if (enemy.x > this.gameState.player.x) enemy.x -= 0.1;
-      if (enemy.y < this.gameState.player.y) enemy.y += 0.1;
-      if (enemy.y > this.gameState.player.y) enemy.y -= 0.1;
+      if (enemy.x < 20) enemy.x += 0.1;
+      if (enemy.x > 20) enemy.x -= 0.1;
+      if (enemy.y < 20) enemy.y += 0.1;
+      if (enemy.y > 20) enemy.y -= 0.1;
     });
   }
 
   // --- DAMAGE ENEMY ---
   damageEnemy(index: number, damage: number) {
     if (!this.enemies[index]) return;
-
+  
     this.enemies[index].health -= damage;
     console.log(`💥 Enemy hit! Health: ${this.enemies[index].health}`);
-
+  
     if (this.enemies[index].health <= 0) {
       console.log("💀 Enemy defeated!");
-      this.enemies.splice(index, 1);
+      this.enemies.splice(index, 1); // ✅ Remove dead enemy
     }
   }
+  
 
   // --- FIRE A BULLET ---
   fireBullet() {
-    if (!this.gameState || !this.gameState.currentItem) {
+    if (!this.gameState.currentWeapon) {
       console.log("❌ No weapon equipped!");
       return;
     }
-
+  
     const bullet: Bullet = {
       x: this.gameState.player.x,
       y: this.gameState.player.y,
       direction: this.gameState.lastDirection as 'right' | 'left' | 'up' | 'down',
-      speed: 1.5,
+      speed: 1, // Adjust speed if too slow
       damage: 30,
-      lifetime: 60,
+      lifetime: 50,
     };
-
+  
     this.bullets.push(bullet);
-    console.log("🔥 Bullet fired!", bullet);
+    console.log("🔥 Bullet fired! Bullets now:", this.bullets);
   }
+  
 
   // --- UPDATE BULLETS & CHECK COLLISIONS ---
   updateBullets() {
-    if (!this.gameState) return;
-
+    if (this.bullets.length === 0) return;
+  
     for (let bulletIndex = this.bullets.length - 1; bulletIndex >= 0; bulletIndex--) {
-      let bullet = this.bullets[bulletIndex];
-
+      let bullet: Bullet = this.bullets[bulletIndex];
+  
       switch (bullet.direction) {
         case 'right': bullet.x += bullet.speed; break;
         case 'left': bullet.x -= bullet.speed; break;
         case 'up': bullet.y -= bullet.speed; break;
         case 'down': bullet.y += bullet.speed; break;
       }
-
+  
       bullet.lifetime--;
-
+  
       // ✅ Check if the bullet hits an enemy
       for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex--) {
         let enemy = this.enemies[enemyIndex];
-
-        if (Math.abs(enemy.x - bullet.x) < 0.5 && Math.abs(enemy.y - bullet.y) < 0.5) {
+  
+        if (Math.abs(enemy.x - bullet.x) < 1 && Math.abs(enemy.y - bullet.y) < 1) {
           console.log(`💥 Bullet hit enemy at (${enemy.x}, ${enemy.y})!`);
           this.damageEnemy(enemyIndex, bullet.damage);
           this.bullets.splice(bulletIndex, 1); // ✅ Remove bullet after impact
           break;
-        }
+        }        
       }
-
-      // ✅ Remove bullet if lifetime is over
+  
       if (bullet.lifetime <= 0) {
         this.bullets.splice(bulletIndex, 1);
       }
+      console.log(`🔄 Checking bullet at (${bullet.x}, ${bullet.y}) against enemies:`, this.enemies);
     }
   }
-
-  // --- CHECK IF PLAYER TAKES DAMAGE ---
-  checkPlayerDamage() {
-    if (!this.gameState) return;
-
-    this.enemies.forEach(enemy => {
-      if (Math.abs(this.gameState.player.x - enemy.x) < 1 && Math.abs(this.gameState.player.y - enemy.y) < 1) {
-        console.log("⚠️ Player hit by an enemy!");
-        this.gameState.player.health -= 10;
-      }
-    });
-  }
+  
+  
 }
