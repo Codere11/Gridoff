@@ -17,17 +17,22 @@
   <div class="player" [ngStyle]="getPlayerStyle()"></div>
 
   <!-- HUD (Health, Money) -->
-<div *ngIf="showHUD" class="stats">
+<div *ngIf="gameState.showHUD" class="stats">
   <p> Health: {{ gameState.player.health }} |</p>
-  <p> | Money: {{ money }}</p>
+  <p> | Money: {{ gameState.player.money }}</p>
 </div>
 
-<!-- Inventory -->
-<div class="inventory">
-  <div *ngFor="let item of inventoryItems" class="inventory-slot" (click)="equipWeapon(item.type)">
-    <img class="inventory-icon" [src]="item.icon" [alt]="item.name">
+<div class="inventory" [class.inventory-open]="inventoryOpen">
+  <div *ngFor="let slot of inventoryService.inventorySlots; let i = index" 
+       class="inventory-slot" 
+       [class.selected]="selectedSlotIndex === i"
+       (click)="handleItemClick(i)">  <!-- ✅ Only keep (click), remove (mouseup) -->
+
+    <img *ngIf="slot.item" class="inventory-icon" [src]="slot.item.icon" [alt]="slot.item.name">
   </div>
 </div>
+
+
 
   
 <!-- Enemies -->

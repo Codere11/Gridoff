@@ -45,27 +45,46 @@
     font-weight: bold;
 }
 
+.cdk-drag {
+    transition: none !important; /* ✅ Removes smooth transition delay */
+}
+
+
 .inventory {
     position: absolute;
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    display: flex;
-    gap: 8px; /* ✅ Creates spacing between slots */
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr); /* ✅ Ensures 10 slots per row */
+    gap: 8px;
+    align-items: flex-start;
     justify-content: center;
     background: rgba(0, 0, 0, 0.8);
     border-radius: 10px;
     padding: 10px;
     z-index: 100;
-    min-width: auto; /* ✅ Auto-size to fit content */
-    height: 80px;
+    min-width: auto;
+    height: auto;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease-in-out;
+}
+
+/* ✅ Extra inventory slots (30 slots in 3 rows of 10) */
+.extra-inventory {
+    position: absolute;
+    bottom: 100%; /* ✅ Moves extra slots above base slots */
+    background: black;
+    left: 14px;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
 }
 
 
+/* ✅ Ensure smooth transitions */
 .inventory-slot {
-    width: 64px;  /* ✅ Fix to standard size */
+    width: 64px;
     height: 64px;
     display: flex;
     align-items: center;
@@ -73,34 +92,17 @@
     background: rgba(255, 255, 255, 0.1);
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 5px;
-    transition: all 0.2s ease-in-out;
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
     cursor: pointer;
-    overflow: hidden; /* ✅ Prevents oversized images */
-}
-
-
-.inventory-slot:hover {
-    border-color: white;
-    background: rgba(255, 255, 255, 0.2);
+    overflow: hidden;
 }
 
 .inventory-icon {
-    width: 48px;  /* ✅ Fixes icon size */
+    width: 48px;  /* ✅ Ensures a fixed icon size */
     height: 48px;
-    object-fit: contain;
+    object-fit: contain;  /* ✅ Prevents stretching */
     display: block;
 }
 
 
 
-.inventory-count {
-    position: absolute;
-    bottom: 2px;
-    right: 5px;
-    font-size: 14px;
-    font-weight: bold;
-    color: white;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 2px 5px;
-    border-radius: 3px;
-}
