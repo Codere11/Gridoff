@@ -69,6 +69,27 @@
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease-in-out;
 }
+  
+  .inventory-slot {
+    width: 64px;       
+    height: 64px;      
+    margin: 4px;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    opacity: 0.8;
+    z-index: 1000;
+  }
+  
 
 /* ✅ Extra inventory slots (30 slots in 3 rows of 10) */
 .extra-inventory {
@@ -104,5 +125,16 @@
     display: block;
 }
 
-
-
+.stack-quantity {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    user-select: none;
+  }
+  

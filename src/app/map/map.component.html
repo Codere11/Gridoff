@@ -23,14 +23,27 @@
 </div>
 
 <div class="inventory" [class.inventory-open]="inventoryOpen">
-  <div *ngFor="let slot of inventoryService.inventorySlots; let i = index" 
-       class="inventory-slot" 
-       [class.selected]="selectedSlotIndex === i"
-       (click)="handleItemClick(i)">  <!-- ✅ Only keep (click), remove (mouseup) -->
-
+  <div *ngFor="let slot of inventoryService.inventorySlots; let i = index; trackBy: trackBySlot"
+       class="inventory-slot"
+       (mousedown)="onMouseDown($event, i)"
+       [attr.data-index]="i">
     <img *ngIf="slot.item" class="inventory-icon" [src]="slot.item.icon" [alt]="slot.item.name">
+    <span *ngIf="slot.quantity > 1" class="stack-quantity">{{ slot.quantity }}</span>
+  </div>
+
+  <!-- Ghost element that follows the mouse while dragging -->
+  <div *ngIf="draggingSlot !== null" class="drag-ghost" [ngStyle]="dragGhostStyle">
+    <img *ngIf="inventoryService.inventorySlots[draggingSlot].item" class="inventory-icon"
+         [src]="inventoryService.inventorySlots[draggingSlot].item?.icon"
+         [alt]="inventoryService.inventorySlots[draggingSlot].item?.name">
+    <span *ngIf="inventoryService.inventorySlots[draggingSlot].quantity > 1" class="stack-quantity">
+      {{ inventoryService.inventorySlots[draggingSlot].quantity }}
+    </span>
   </div>
 </div>
+
+
+
 
 
 
