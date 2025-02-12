@@ -7,15 +7,12 @@
     overflow: hidden; /* Allow tiles to render outside */
 }
 
-  
 .tile {
     position: absolute;
     background-size: cover;
     z-index: 10;
 }
 
-
-  
 .player {
     width: 64px;  /* Single frame width */
     height: 64px; /* Single frame height */
@@ -24,7 +21,6 @@
     background-position: 0px 0px;
 }
 
-  
 .stats {
     position: absolute;
     top: 10px;
@@ -33,7 +29,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background:white;
+    background: white;
     background-size: cover;
     padding: 8px 20px;
     border-radius: 10px;
@@ -46,9 +42,8 @@
 }
 
 .cdk-drag {
-    transition: none !important; /* ✅ Removes smooth transition delay */
+    transition: none !important; /* Removes smooth transition delay */
 }
-
 
 .inventory {
     position: absolute;
@@ -56,7 +51,7 @@
     left: 50%;
     transform: translateX(-50%);
     display: grid;
-    grid-template-columns: repeat(10, 1fr); /* ✅ Ensures 10 slots per row */
+    grid-template-columns: repeat(10, 1fr); /* Ensures 10 slots per row */
     gap: 8px;
     align-items: flex-start;
     justify-content: center;
@@ -69,44 +64,11 @@
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease-in-out;
 }
-  
-  .inventory-slot {
+
+.inventory-slot {
+    position: relative; /* Allow absolutely positioned children */
     width: 64px;       
     height: 64px;      
-    margin: 4px;
-    border: 1px solid #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    cursor: pointer;
-    user-select: none;
-  }
-  
-  .drag-ghost {
-    position: fixed;
-    pointer-events: none;
-    opacity: 0.8;
-    z-index: 1000;
-  }
-  
-
-/* ✅ Extra inventory slots (30 slots in 3 rows of 10) */
-.extra-inventory {
-    position: absolute;
-    bottom: 100%; /* ✅ Moves extra slots above base slots */
-    background: black;
-    left: 14px;
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    gap: 8px;
-}
-
-
-/* ✅ Ensure smooth transitions */
-.inventory-slot {
-    width: 64px;
-    height: 64px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -119,22 +81,53 @@
 }
 
 .inventory-icon {
-    width: 48px;  /* ✅ Ensures a fixed icon size */
+    width: 48px;  /* Ensures a fixed icon size */
     height: 48px;
-    object-fit: contain;  /* ✅ Prevents stretching */
+    object-fit: contain;  /* Prevents stretching */
     display: block;
 }
 
 .stack-quantity {
     position: absolute;
-    bottom: 4px;
+    top: 4px;   /* Position the quantity overlay at the top */
     right: 4px;
-    background-color: rgba(0, 0, 0, 0.75);
+    background-color: rgba(0, 0, 0, 0.8);
     color: white;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 2px 4px;
+    border-radius: 3px;
     user-select: none;
-  }
-  
+}
+
+.drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    opacity: 1; /* full opacity for debugging */
+    z-index: 10000; /* very high to ensure it's on top */
+    width: 64px;    /* match your inventory slot size */
+    height: 64px;
+    border: 1px solid black !important; /* force the debug border */
+    background-color: white !important; /* force background */
+}
+
+
+/* Extra inventory slots (30 slots in 3 rows of 10) */
+.extra-inventory {
+    position: absolute;
+    bottom: 100%; /* Moves extra slots above base slots */
+    background: black;
+    left: 14px;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
+}
+
+.icon-wrapper {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+

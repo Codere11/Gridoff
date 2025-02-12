@@ -18,10 +18,9 @@ export interface InventorySlot {
   providedIn: 'root'
 })
 export class InventoryService {
-
-  baseInventorySlots: InventorySlot[] = new Array(10).fill({});
-  extraInventorySlots: InventorySlot[] = []; // Starts empty
-
+  // Base and extra slots for inventory management.
+  baseInventorySlots: InventorySlot[] = new Array(10).fill({}).map((_, i) => ({ id: i, item: null, quantity: 0 }));
+  extraInventorySlots: InventorySlot[] = [];
 
   inventorySlots: InventorySlot[] = [
     { id: 0, item: { id: 1, name: 'AK-47', type: 'ak47', icon: '../../assets/weapons/ak.png', stackable: false }, quantity: 1 },
@@ -37,66 +36,49 @@ export class InventoryService {
   ];
 
   expandInventory(extraSlots: number) {
-    const currentTotalSlots = this.inventorySlots.length + this.extraInventorySlots.length;
-    
-    if (currentTotalSlots < this.inventorySlots.length + extraSlots) {
-        const missingSlots = (this.inventorySlots.length + extraSlots) - currentTotalSlots;
-        
-        this.extraInventorySlots = [
-            ...this.extraInventorySlots,
-            ...Array.from({ length: missingSlots }, (_, i) => ({
-                id: currentTotalSlots + i,
-                item: null,
-                quantity: 0
-            }))
-        ];
+    const currentTotal = this.inventorySlots.length + this.extraInventorySlots.length;
+    if (currentTotal < this.inventorySlots.length + extraSlots) {
+      const missing = (this.inventorySlots.length + extraSlots) - currentTotal;
+      this.extraInventorySlots = [
+        ...this.extraInventorySlots,
+        ...Array.from({ length: missing }, (_, i) => ({
+          id: currentTotal + i,
+          item: null,
+          quantity: 0
+        }))
+      ];
     }
-
     this.inventorySlots = [...this.inventorySlots, ...this.extraInventorySlots];
-}
+  }
 
+  resetInventory() {
+    // Preserve base slots and do not clear extra slots.
+    this.baseInventorySlots = this.inventorySlots.slice(0, 10);
+    this.inventorySlots = [...this.baseInventorySlots];
+  }
 
-
-
-resetInventory() {
-  // ✅ Preserve existing items in base inventory slots
-  this.baseInventorySlots = this.inventorySlots.slice(0, 10); 
-
-  // ✅ Remove only extra slots
-  this.extraInventorySlots = [];
-
-  // ✅ Update `inventorySlots` to reflect only the base inventory
-  this.inventorySlots = [...this.baseInventorySlots];
-}
-
-addItemToInventory(newItem: Item) {
-  // Check if the item is stackable
-  if (newItem.stackable) {
-    const existingSlot = this.inventorySlots.find(slot => slot.item?.id === newItem.id);
-
-    if (existingSlot) {
-      existingSlot.quantity += 1;  // ✅ Increase stack
+  addItemToInventory(newItem: Item) {
+    if (newItem.stackable) {
+      const existing = this.inventorySlots.find(slot => slot.item?.id === newItem.id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        const empty = this.inventorySlots.find(slot => slot.item === null);
+        if (empty) {
+          empty.item = { ...newItem };
+          empty.quantity = 1;
+        } else {
+          console.log("Inventory full!");
+        }
+      }
     } else {
-      // Find an empty slot
-      const emptySlot = this.inventorySlots.find(slot => slot.item === null);
-      if (emptySlot) {
-        emptySlot.item = { ...newItem };
-        emptySlot.quantity = 1;  // ✅ Initialize quantity
+      const empty = this.inventorySlots.find(slot => slot.item === null);
+      if (empty) {
+        empty.item = { ...newItem };
+        empty.quantity = 1;
       } else {
         console.log("Inventory full!");
       }
     }
-  } else {
-    // Normal (non-stackable) item handling
-    const emptySlot = this.inventorySlots.find(slot => slot.item === null);
-    if (emptySlot) {
-      emptySlot.item = { ...newItem };
-      emptySlot.quantity = 1;  // ✅ Even non-stackable items should have quantity
-    } else {
-      console.log("Inventory full!");
-    }
   }
-}
-
-
 }
