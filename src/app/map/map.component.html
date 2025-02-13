@@ -24,12 +24,13 @@
 
 <div class="inventory" [class.inventory-open]="inventoryOpen">
   <div *ngFor="let slot of inventoryService.inventorySlots; let i = index; trackBy: trackBySlot"
-       class="inventory-slot"
-       (mousedown)="onMouseDown($event, i)"
-       [attr.data-index]="i">
-    <img *ngIf="slot.item" class="inventory-icon" [src]="slot.item.icon" [alt]="slot.item.name">
-    <span *ngIf="slot.quantity > 1" class="stack-quantity">{{ slot.quantity }}</span>
-  </div>
+  class="inventory-slot"
+  (mousedown)="onMouseDown($event, i)"
+  [attr.data-index]="i">
+<img *ngIf="slot.item" class="inventory-icon" [src]="slot.item.icon" [alt]="slot.item.name">
+<span *ngIf="slot.quantity > 1" class="stack-quantity">{{ slot.quantity }}</span>
+</div>
+
 </div>
 
 <!-- Ghost element (placed outside to preserve fixed positioning) -->

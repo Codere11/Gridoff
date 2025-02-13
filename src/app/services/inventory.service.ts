@@ -18,15 +18,14 @@ export interface InventorySlot {
   providedIn: 'root'
 })
 export class InventoryService {
-  // Base and extra slots for inventory management.
   baseInventorySlots: InventorySlot[] = new Array(10).fill({}).map((_, i) => ({ id: i, item: null, quantity: 0 }));
   extraInventorySlots: InventorySlot[] = [];
 
   inventorySlots: InventorySlot[] = [
     { id: 0, item: { id: 1, name: 'AK-47', type: 'ak47', icon: '../../assets/weapons/ak.png', stackable: false }, quantity: 1 },
-    { id: 1, item: { id: 2, name: 'Shovel', type: 'shovel', icon: '../../assets/icons/shovel.png', stackable: false }, quantity: 1 },
-    { id: 2, item: { id: 3, name: 'Watering Can', type: 'watering-can', icon: '../../assets/icons/watering-can.png', stackable: false }, quantity: 1 },
-    { id: 3, item: { id: 4, name: 'Tobacco Seeds', type: 'tobacco-seeds', icon: '../../assets/icons/tobacco-seeds.png', stackable: true }, quantity: 10 },
+    { id: 1, item: { id: 2, name: 'shovel', type: 'shovel', icon: '../../assets/icons/shovel.png', stackable: false }, quantity: 1 },
+    { id: 2, item: { id: 3, name: 'watering-an', type: 'watering-can', icon: '../../assets/icons/watering-can.png', stackable: false }, quantity: 1 },
+    { id: 3, item: { id: 4, name: 'tobacco-seeds', type: 'tobacco-seeds', icon: '../../assets/icons/tobacco-seeds.png', stackable: true }, quantity: 10 },
     { id: 4, item: null, quantity: 0 },
     { id: 5, item: null, quantity: 0 },
     { id: 6, item: null, quantity: 0 },
@@ -52,7 +51,6 @@ export class InventoryService {
   }
 
   resetInventory() {
-    // Preserve base slots and do not clear extra slots.
     this.baseInventorySlots = this.inventorySlots.slice(0, 10);
     this.inventorySlots = [...this.baseInventorySlots];
   }
@@ -80,5 +78,19 @@ export class InventoryService {
         console.log("Inventory full!");
       }
     }
+  }
+
+  // New method for removing items
+  removeItem(itemType: string, quantity: number): boolean {
+    const slot = this.inventorySlots.find(slot => slot.item && slot.item.type === itemType);
+    if (slot && slot.quantity >= quantity) {
+      slot.quantity -= quantity;
+      if (slot.quantity === 0) {
+        slot.item = null;
+      }
+      this.inventorySlots = [...this.inventorySlots]; // trigger change detection if needed
+      return true;
+    }
+    return false;
   }
 }
