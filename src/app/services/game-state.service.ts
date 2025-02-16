@@ -22,7 +22,7 @@ export class GameStateService {
   worldSize = 1000;
 
   // --- Player State ---
-  player = { x: 20, y: 20, health: 100, money: 0 };
+  player = { x: 20, y: 20, health: 100, money: 0, ammo: 10 };
   currentItem: string | null = null;
   spriteFrame = 0;
   spritePosition = '0px 0px';

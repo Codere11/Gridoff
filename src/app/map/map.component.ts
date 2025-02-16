@@ -4,6 +4,7 @@ import { GameStateService } from '../services/game-state.service';
 import { CombatService } from '../services/combat.service';
 import { InventoryService } from '../services/inventory.service';
 import { InteractionService, Tile, InteractionContext } from '../services/interaction.service';
+import { NpcService, NPC } from '../services/npc.service';
 
 // Interfaces for items, inventory slots, and the dragged stack.
 interface Item {
@@ -38,6 +39,7 @@ export class MapComponent implements OnInit {
   combatService = inject(CombatService);
   inventoryService = inject(InventoryService);
   interactionService = inject(InteractionService);
+  npcService = inject(NpcService);
 
   // Map and camera properties
   tileSize = 128;
@@ -49,23 +51,26 @@ export class MapComponent implements OnInit {
 
   // Drag & Drop state
   draggedStack: DraggedStack | null = null;
-  dragSourceIndex: number = -1; // Use -1 when no valid index
+  dragSourceIndex: number = -1;
   dragButton: number | null = null;
   dragGhostStyle: { [key: string]: string } = {};
   dragOffsetX: number = 0;
   dragOffsetY: number = 0;
 
-  // New properties for distinguishing click vs. drag:
+  // For distinguishing click vs. drag:
   initialMouseX: number = 0;
   initialMouseY: number = 0;
   isDragging: boolean = false;
-  readonly dragThreshold: number = 5; // pixels threshold
+  readonly dragThreshold: number = 5; // pixels
 
-  // Exposed getters for template use.
+  // Exposed getters
   get money() { return this.gameState.player.money; }
   get showHUD() { return this.gameState.showHUD; }
   get inventoryItems() { return this.inventoryService.inventorySlots; }
-
+  get playerCoordinates(): string {
+    return `(${this.gameState.player.x.toFixed(2)}, ${this.gameState.player.y.toFixed(2)})`;
+  }
+  
   // For equipment selection.
   selectedSlotIndex: number | null = null;
 
@@ -87,17 +92,21 @@ export class MapComponent implements OnInit {
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
     let dx = 0, dy = 0;
+    const moveSpeed = 0.2;
     switch (event.key) {
-      case 'w': dx = 0; dy = -0.5; break;
-      case 's': dx = 0; dy = 0.5; break;
-      case 'a': dx = -0.5; dy = 0; break;
-      case 'd': dx = 0.5; dy = 0; break;
+      case 'w': dy = -moveSpeed; break;
+      case 's': dy = moveSpeed; break;
+      case 'a': dx = -moveSpeed; break;
+      case 'd': dx = moveSpeed; break;
       case 'f':
         this.combatService.fireBullet();
         this.gameState.updatePlayerAnimation(0, 0, true);
         return;
       case 'e':
         this.toggleInventory();
+        break;
+      case 'y':
+        console.log('Player coordinates:', this.playerCoordinates);
         break;
     }
     if (dx !== 0 || dy !== 0) {
@@ -108,101 +117,90 @@ export class MapComponent implements OnInit {
 
   @HostListener('click', ['$event'])
   onClick(event: MouseEvent) {
-  // Calculate tile coordinates based on camera position.
-  const tileX = Math.floor((event.clientX / this.tileSize) + this.cameraX);
-  const tileY = Math.floor((event.clientY / this.tileSize) + this.cameraY);
-
-  // Ensure the clicked tile is within the bounds of the map.
-  if (
-    tileY < 0 ||
-    tileY >= this.gameState.map.length ||
-    tileX < 0 ||
-    tileX >= this.gameState.map[0].length
-  ) {
-    console.warn('Clicked tile is out of bounds:', tileX, tileY);
-    return;
-  }
-
-  // Retrieve the tile.
-  const tile: Tile = this.gameState.map[tileY][tileX];
-
-  // If the tile is a fully grown tobacco plant, harvest it.
-  if (tile.type === 'tobacco-3') {
-    this.harvestTobacco(tile);
-    return;
-  }
-
-  // If using a weapon, fire bullet.
-  if (this.gameState.currentItem === 'ak47') {
-    this.combatService.fireBullet();
-  } else {
-    // Build the interaction context.
-    const context: InteractionContext = {
-      inventory: {
-        removeItem: (itemType: string, quantity: number) => {
-          return this.inventoryService.removeItem(itemType, quantity);
+    // FIRST: Check for a nearby trader (villager)
+    const trader = this.getNearbyTrader();
+    if (trader) {
+      this.showTradeHUD = true;
+      this.currentTrader = trader;
+      console.log("Trading with trader:", trader);
+      return;  // Exit immediately to open trade HUD
+    }
+    
+    // Otherwise, process tile interactions:
+    const tileX = Math.floor((event.clientX / this.tileSize) + this.cameraX);
+    const tileY = Math.floor((event.clientY / this.tileSize) + this.cameraY);
+  
+    if (
+      tileY < 0 ||
+      tileY >= this.gameState.map.length ||
+      tileX < 0 ||
+      tileX >= this.gameState.map[0].length
+    ) {
+      console.warn('Clicked tile is out of bounds:', tileX, tileY);
+      return;
+    }
+  
+    const tile: Tile = this.gameState.map[tileY][tileX];
+  
+    if (tile.type === 'tobacco-3') {
+      this.harvestTobacco(tile);
+      return;
+    }
+  
+    if (this.gameState.currentItem === 'ak47') {
+      this.combatService.fireBullet();
+    } else {
+      const context: InteractionContext = {
+        inventory: {
+          removeItem: (itemType: string, quantity: number) => this.inventoryService.removeItem(itemType, quantity)
         }
-      }
-    };
-    // Delegate the tile interaction to the InteractionService.
-    this.interactionService.handleInteraction(tile, context);
-  }
-}
-
-harvestTobacco(tile: Tile): void {
-  // Generate random drops: random integer from 3 to 5.
-  const seedsDrop = Math.floor(Math.random() * 3) + 3;    // 3, 4, or 5 seeds.
-  const tobaccoDrop = Math.floor(Math.random() * 3) + 3;    // 3, 4, or 5 tobacco items.
-
-  console.log(`Harvesting tobacco: dropping ${seedsDrop} seeds and ${tobaccoDrop} tobacco items`);
-
-  // Add the drops to the inventory.
-  // Ensure that the items you add match your InventoryService definitions.
-  for (let i = 0; i < seedsDrop; i++) {
-    this.inventoryService.addItemToInventory({
-      id: 4,  // Ensure this id doesn't conflict with other items.
-      name: 'Tobacco Seeds',
-      type: 'tobacco-seeds',
-      icon: '../../assets/icons/tobacco-seeds.png',
-      stackable: true
-    });
-  }
-  for (let i = 0; i < tobaccoDrop; i++) {
-    this.inventoryService.addItemToInventory({
-      id: 5,  // New id for the harvested tobacco item.
-      name: 'Tobacco',
-      type: 'tobacco',
-      icon: '../../assets/icons/tobacco.png',
-      stackable: true
-    });
+      };
+      this.interactionService.handleInteraction(tile, context);
+    }
   }
 
-  // Reset the tile after harvest. For example, revert it to farmland.
-  tile.type = 'farmland';
-  tile.growthStage = 0;
-  console.log('Tobacco harvested. Tile reset to farmland.');
-}
+  // Checks for a nearby trader NPC (of type "villager")
+  harvestTobacco(tile: Tile): void {
+    const seedsDrop = Math.floor(Math.random() * 3) + 3;
+    const tobaccoDrop = Math.floor(Math.random() * 3) + 3;
+    console.log(`Harvesting tobacco: dropping ${seedsDrop} seeds and ${tobaccoDrop} tobacco items`);
+    for (let i = 0; i < seedsDrop; i++) {
+      this.inventoryService.addItemToInventory({
+        id: 4,
+        name: 'Tobacco Seeds',
+        type: 'tobacco-seeds',
+        icon: '../../assets/icons/tobacco-seeds.png',
+        stackable: true
+      });
+    }
+    for (let i = 0; i < tobaccoDrop; i++) {
+      this.inventoryService.addItemToInventory({
+        id: 5,
+        name: 'Tobacco',
+        type: 'tobacco',
+        icon: '../../assets/icons/tobacco.png',
+        stackable: true
+      });
+    }
+    tile.type = 'farmland';
+    tile.growthStage = 0;
+    console.log('Tobacco harvested. Tile reset to farmland.');
+  }
 
-
-
-  // Equip tool method, used from onMouseUp if no drag occurred.
   equipTool(slot: InventorySlot): void {
     if (slot && slot.item) {
       console.log('EquipTool called with item:', slot.item);
-      const toolTypes = ['shovel', 'watering-can', 'tobacco-seeds'];
-      if (toolTypes.includes(slot.item.type)) {
+      const equippableTypes = ['shovel', 'watering-can', 'tobacco-seeds', 'ak47'];
+      if (equippableTypes.includes(slot.item.type)) {
         this.gameState.equipItem(slot.item.type);
         this.interactionService.setEquippedItem(slot.item.type);
-        console.log(`Equipped tool: ${slot.item.name} (type: ${slot.item.type})`);
+        console.log(`Equipped item: ${slot.item.name} (type: ${slot.item.type})`);
       } else {
-        console.log(`${slot.item.name} is not recognized as a tool!`);
+        console.log(`${slot.item.name} is not recognized as equippable!`);
       }
     }
   }
 
-  // ---------------
-  // Update Methods
-  // ---------------
   updateCamera() {
     this.cameraX = Math.max(0, Math.min(
       this.gameState.worldSize - this.visibleTilesX,
@@ -216,13 +214,10 @@ harvestTobacco(tile: Tile): void {
 
   updateGameLoop() {
     this.combatService.updateBullets();
-    this.combatService.updateEnemies();
+    this.npcService.updateNpcs();
     requestAnimationFrame(() => this.updateGameLoop());
   }
 
-  // ---------------
-  // Style Getter Methods
-  // ---------------
   getBulletStyle(bullet: any) {
     return {
       position: 'absolute',
@@ -244,46 +239,22 @@ harvestTobacco(tile: Tile): void {
     return this.gameState.getPlayerStyle(this.cameraX, this.cameraY);
   }
 
-  getEnemyStyle(enemy: any) {
-    return {
-      position: 'absolute',
-      left: `${(enemy.x - this.cameraX) * this.tileSize}px`,
-      top: `${(enemy.y - this.cameraY) * this.tileSize}px`,
-      width: "128px",
-      height: "128px",
-      backgroundImage: "url('assets/sprites/enemy.png')",
-      backgroundSize: "cover",
-      zIndex: '99'
-    };
-  }
-
-  // ---------------
-  // Inventory & Equipment Methods (including drag & drop)
-  // ---------------
-  // Note: Removed (click)="equipTool(slot)" from template so we handle equipping in onMouseUp if no drag occurred.
-
   onMouseDown(event: MouseEvent, index: number): void {
     event.preventDefault();
     if (event.which !== 1) return;
-    // Record initial mouse position.
     this.initialMouseX = event.clientX;
     this.initialMouseY = event.clientY;
     this.isDragging = false;
-
     this.dragSourceIndex = index;
     const slot = this.inventoryService.inventorySlots[index];
     if (!slot.item) return;
-
     const targetElem = event.currentTarget as HTMLElement;
     const rect = targetElem.getBoundingClientRect();
     this.dragOffsetX = event.clientX - rect.left;
     this.dragOffsetY = event.clientY - rect.top;
-
     this.draggedStack = { item: slot.item, quantity: slot.quantity };
-    // Remove item from inventory.
     slot.item = null;
     slot.quantity = 0;
-
     this.dragGhostStyle = {
       position: 'fixed',
       left: `${event.clientX - this.dragOffsetX}px`,
@@ -301,35 +272,65 @@ harvestTobacco(tile: Tile): void {
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent): void {
     if (!this.draggedStack) return;
-    // Check if movement exceeds threshold.
     const dx = event.clientX - this.initialMouseX;
     const dy = event.clientY - this.initialMouseY;
     const distance = Math.sqrt(dx * dx + dy * dy);
     if (!this.isDragging && distance > this.dragThreshold) {
       this.isDragging = true;
     }
-    // Update ghost element position.
     this.dragGhostStyle['left'] = `${event.clientX - this.dragOffsetX}px`;
     this.dragGhostStyle['top'] = `${event.clientY - this.dragOffsetY}px`;
   }
 
   @HostListener('document:mouseup', ['$event'])
   onMouseUp(event: MouseEvent): void {
+
     if (!this.draggedStack || event.which !== 1) return;
-    // If no drag occurred, treat as a click and equip.
+
+    if (this.showTradeHUD && (event.target as HTMLElement).closest('.trade-slot')) {
+      if (this.draggedStack.item.type !== 'tobacco') {
+        console.log("Only tobacco can be placed in the trade slot.");
+        const sourceSlot = this.inventoryService.inventorySlots[this.dragSourceIndex];
+        sourceSlot.item = { ...this.draggedStack.item };
+        sourceSlot.quantity = this.draggedStack.quantity;
+        this.clearDragState();
+        return;
+      }
+      if (!this.tradeSlot.item) {
+        this.tradeSlot.item = { ...this.draggedStack.item };
+        this.tradeSlot.quantity = this.draggedStack.quantity;
+      } else if (this.tradeSlot.item.id === this.draggedStack.item.id) {
+        this.tradeSlot.quantity += this.draggedStack.quantity;
+      }
+      console.log(`Dropped ${this.draggedStack.quantity} tobacco into the trade slot.`);
+      this.clearDragState();
+      return;
+    } if (!this.draggedStack || event.which !== 1) return;
+  
+  // If trade HUD is open and drop happened inside a trade slot:
+  if (this.showTradeHUD && (event.target as HTMLElement).closest('.trade-slot')) {
+    const dragged = this.draggedStack; // Now non-null
+    if (!this.tradeSlot.item) {
+      this.tradeSlot.item = { ...dragged.item };
+      this.tradeSlot.quantity = dragged.quantity;
+    } else if (this.tradeSlot.item.id === dragged.item.id) {
+      this.tradeSlot.quantity += dragged.quantity;
+    }
+    console.log(`Dropped ${dragged.quantity} tobacco into the trade slot.`);
+    this.clearDragState();
+    return;
+  }
+    if (!this.draggedStack || event.which !== 1) return;
     if (!this.isDragging) {
       const slot = this.inventoryService.inventorySlots[this.dragSourceIndex];
       if (slot) {
-        // Place the item back into the slot.
         slot.item = { ...this.draggedStack.item };
         slot.quantity = this.draggedStack.quantity;
-        // Equip the tool.
         this.equipTool(slot);
       }
       this.clearDragState();
       return;
     }
-    // Otherwise, proceed with existing drag/drop logic.
     const dropElem = document.elementFromPoint(event.clientX, event.clientY);
     let targetIndex: number | null = null;
     if (dropElem) {
@@ -433,9 +434,6 @@ harvestTobacco(tile: Tile): void {
     return slot.id;
   }
 
-  // ---------------
-  // Existing Inventory & Equipment Methods
-  // ---------------
   handleItemClick(index: number) {
     console.log(`Clicked slot: ${index}, Selected slot: ${this.selectedSlotIndex}`);
     const clickedSlot = this.inventoryService.inventorySlots[index];
@@ -469,9 +467,160 @@ harvestTobacco(tile: Tile): void {
   toggleInventory() {
     this.inventoryOpen = !this.inventoryOpen;
     if (this.inventoryOpen) {
-      this.inventoryService.expandInventory(30); // Adds 30 slots.
+      this.inventoryService.expandInventory(30);
     } else {
-      this.inventoryService.resetInventory(); // Resets to base slots.
+      this.inventoryService.resetInventory();
     }
   }
+
+  getNpcStyle(npc: NPC) {
+    const scale = 1.5;
+    const npcSize = this.tileSize * scale;
+    const cellSize = 128 * scale;
+    let backgroundPosition = '';
+    
+    if (npc.direction === 'left') {
+      backgroundPosition = '0px 0px';
+    } else if (npc.direction === 'right') {
+      backgroundPosition = `-${cellSize}px 0px`;
+    } else if (npc.direction === 'up') {
+      backgroundPosition = npc.animationFrame === 0 
+        ? `0px -${cellSize}px` 
+        : `-${cellSize}px -${cellSize}px`;
+    } else if (npc.direction === 'down') {
+      backgroundPosition = '0px 0px';
+    }
+    
+    return {
+      width: '100%',
+      height: '100%',
+      backgroundImage: "url('assets/sprites/villager-spritesheet.png')",
+      backgroundSize: `${256 * scale}px ${256 * scale}px`,
+      backgroundPosition: backgroundPosition,
+      pointerEvents: 'none'
+    };
+  }
+  
+  getNpcContainerStyle(npc: NPC) {
+    const scale = 1.5;
+    const npcSize = this.tileSize * scale;
+    const offset = (npcSize - this.tileSize) / 2;
+    return {
+      position: 'absolute',
+      left: `${(npc.x - this.cameraX) * this.tileSize - offset}px`,
+      top: `${(npc.y - this.cameraY) * this.tileSize - offset}px`,
+      width: `${npcSize}px`,
+      height: `${npcSize}px`,
+      zIndex: 50
+    };
+  }
+  
+  getNpcHealthStyle(npc: NPC) {
+    const healthPercent = npc.health ?? 100;
+    return {
+      width: `${healthPercent}%`
+    };
+  }
+
+  // New properties for trading:
+  // Add these new properties at the class level
+showTradeHUD: boolean = false;
+currentTrader: NPC | null = null;
+
+// Trade slot for holding tobacco to be sold
+tradeSlot: InventorySlot = { id: -1, item: null, quantity: 0 };
+
+// Getter for trade value (each tobacco unit gives 10 coins)
+get tradeValue(): number {
+  return (this.tradeSlot.item && this.tradeSlot.item.type === 'tobacco') 
+         ? this.tradeSlot.quantity * 10 
+         : 0;
+}
+
+doTrade(): void {
+  if (this.tradeSlot.item && this.tradeSlot.item.type === 'tobacco' && this.tradeSlot.quantity > 0) {
+    this.sellTobacco();  // Calls your coin-dropping logic
+  } else {
+    console.log("No tobacco in the trade slot to sell.");
+  }
+}
+
+// Example: You can use the following if you prefer native events:
+onTradeDragOver(event: DragEvent): void {
+  event.preventDefault();
+}
+
+onTradeDrop(event: DragEvent): void {
+  event.preventDefault();
+  if (!this.draggedStack) return;
+  if (this.draggedStack.item.type !== 'tobacco') {
+    console.log("Only tobacco can be dropped in the trade slot.");
+    return;
+  }
+  if (!this.tradeSlot.item) {
+    this.tradeSlot.item = { ...this.draggedStack.item };
+    this.tradeSlot.quantity = this.draggedStack.quantity;
+  } else if (this.tradeSlot.item.id === this.draggedStack.item.id) {
+    this.tradeSlot.quantity += this.draggedStack.quantity;
+  }
+  console.log(`Dropped ${this.draggedStack.quantity} tobacco into the trade slot.`);
+  this.clearDragState();
+}
+
+// (Rest of your existing code remains unchanged)
+
+
+// For testing, modify getNearbyTrader() if needed (unchanged otherwise)
+getNearbyTrader(): NPC | null {
+  const range = 4;
+  const playerX = this.gameState.player.x;
+  const playerY = this.gameState.player.y;
+  console.log(`Checking for trader near (${playerX}, ${playerY}) with range ${range}`);
+  
+  const trader = this.npcService.npcs.find(npc => {
+    console.log(`NPC: ${npc.name || npc.type} at (${npc.x}, ${npc.y})`);
+    return npc.type === 'villager' &&
+           Math.abs(npc.x - playerX) <= range &&
+           Math.abs(npc.y - playerY) <= range;
+  });
+  if (trader) {
+    console.log("Found trader:", trader);
+  } else {
+    console.log("No trader found nearby.");
+  }
+  return trader || null;
+}
+
+sellTobacco(): void {
+  const totalTobacco = this.tradeSlot.quantity;
+  const coinsEarned = totalTobacco * 10;
+  // Add coin items to the inventory
+  for (let i = 0; i < coinsEarned; i++) {
+    this.inventoryService.addItemToInventory({
+      id: 6, // ensure unique id for coin
+      name: 'Coin',
+      type: 'coin',
+      icon: '../../assets/icons/coin.png',
+      stackable: true
+    });
+  }
+  console.log(`Traded ${totalTobacco} tobacco for ${coinsEarned} coins (as items).`);
+  // Clear the trade slot without returning items to inventory.
+  this.clearTradeSlot();
+  this.closeTrade();
+}
+
+clearTradeSlot(): void {
+  // Simply reset the trade slot so that no tobacco remains.
+  this.tradeSlot.item = null;
+  this.tradeSlot.quantity = 0;
+}
+
+closeTrade(): void {
+  // When closing after a trade, we do not return leftover items.
+  this.showTradeHUD = false;
+  this.currentTrader = null;
+  // (If you want a cancel action to return items, you could add a separate cancelTrade() method.)
+}
+
 }

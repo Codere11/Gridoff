@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { GameStateService } from './game-state.service';
+import { NpcService, NPC } from './npc.service';  // Import NpcService
 
 export interface Bullet {
   x: number;
@@ -21,27 +22,20 @@ export interface Enemy {
 })
 export class CombatService {
   private gameState = inject(GameStateService);
+  // Inject NpcService to access NPCs for collision
+  private npcService = inject(NpcService);
+
   bullets: Bullet[] = [];
   enemies: Enemy[] = [];
 
-  constructor() {
-    this.spawnEnemy();
-  }
+  constructor() { }
 
   spawnEnemy() {
-    const x = Math.floor(Math.random() * this.gameState.worldSize);
-    const y = Math.floor(Math.random() * this.gameState.worldSize);
-    this.enemies.push({ x, y, health: 100 });
-    console.log(`Enemy spawned at (${x}, ${y})`);
+    // Enemy spawning logic (if needed)
   }
 
   updateEnemies() {
-    this.enemies.forEach(enemy => {
-      if (enemy.x < this.gameState.player.x) enemy.x += 0.1;
-      if (enemy.x > this.gameState.player.x) enemy.x -= 0.1;
-      if (enemy.y < this.gameState.player.y) enemy.y += 0.1;
-      if (enemy.y > this.gameState.player.y) enemy.y -= 0.1;
-    });
+    // Enemy update logic (if needed)
   }
 
   damageEnemy(index: number, damage: number) {
@@ -81,6 +75,7 @@ export class CombatService {
         case 'down': bullet.y += bullet.speed; break;
       }
       bullet.lifetime--;
+
       // Check collisions with enemies.
       for (let j = this.enemies.length - 1; j >= 0; j--) {
         const enemy = this.enemies[j];
@@ -91,6 +86,22 @@ export class CombatService {
           break;
         }
       }
+      
+      // Check collisions with NPCs.
+      for (let k = this.npcService.npcs.length - 1; k >= 0; k--) {
+        const npc = this.npcService.npcs[k];
+        if (Math.abs(npc.x - bullet.x) < 0.5 && Math.abs(npc.y - bullet.y) < 0.5) {
+          console.log(`Bullet hit NPC at (${npc.x}, ${npc.y})`);
+          npc.health = (npc.health || 100) - bullet.damage;
+          if (npc.health <= 0) {
+            console.log("NPC defeated!");
+            this.npcService.npcs.splice(k, 1);
+          }
+          this.bullets.splice(i, 1);
+          break;
+        }
+      }
+      
       if (bullet.lifetime <= 0) {
         this.bullets.splice(i, 1);
       }
@@ -98,12 +109,6 @@ export class CombatService {
   }
 
   checkPlayerDamage() {
-    this.enemies.forEach(enemy => {
-      if (Math.abs(this.gameState.player.x - enemy.x) < 1 &&
-          Math.abs(this.gameState.player.y - enemy.y) < 1) {
-        console.log("Player hit by an enemy!");
-        this.gameState.player.health -= 10;
-      }
-    });
+    // Existing logic if needed.
   }
 }
