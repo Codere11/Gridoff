@@ -22,23 +22,51 @@ export class NpcService {
   private _frameCounter: number = 0;
   // Inject GameStateService to access the map
   private gameState = inject(GameStateService);
-
+  private _processedHouseIndices: Set<number> = new Set<number>();
   constructor() {
-    // For now, spawn a basic NPC (villager) that wanders near the player
-    this.spawnNpc({ type: 'villager', name: 'Villager' });
-  }
-
-  spawnNpc(initial: Partial<NPC>) {
-    const playerX = 20; // For testing, use the player’s starting x (or retrieve from GameStateService)
-    const playerY = 20; // For testing, use the player’s starting y (or retrieve from GameStateService)
-    const npc: NPC = {
-      id: Date.now(),
-      type: initial.type || 'villager',
-      // Spawn within ±1 unit around the player:
-      x: playerX + (Math.random() * 2 - 1), // Range: 19 to 21
-      y: playerY + (Math.random() * 2 - 1), // Range: 19 to 21
+    const playerX = 20; // or retrieve from GameStateService.player.x if available
+    const playerY = 20; // or retrieve from GameStateService.player.y if available
+    this.spawnNpc({
+      type: 'gunSeller',
+      name: 'Gun Trader',
+      x: playerX,
+      y: playerY,
       direction: 'right',
       animationFrame: 0,
+      health: 100
+    });}
+
+  spawnVillagersForHouses(): void {
+    // Loop through each house coordinate
+    this.gameState.houseCoordinates.forEach((coord, index) => {
+      // Only spawn a villager for every 10th house
+      if (index % 10 === 0) {
+        // Optionally, add a slight offset if desired:
+        const offsetX = 0.0; 
+        const offsetY = 0.0;
+        this.spawnNpc({
+          type: 'villager',
+          name: 'Villager',
+          x: coord.x + offsetX,
+          y: coord.y + offsetY,
+          direction: 'right',
+          animationFrame: 0,
+          health: 100
+        });
+      }
+    });
+  }
+  
+
+  spawnNpc(initial: Partial<NPC>): void {
+    const npc: NPC = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      type: initial.type || 'villager',
+      name: initial.name,
+      x: initial.x ?? 20,
+      y: initial.y ?? 20,
+      direction: initial.direction || 'right',
+      animationFrame: initial.animationFrame ?? 0,
       health: initial.health ?? 100,
       ...initial
     };
@@ -49,8 +77,8 @@ export class NpcService {
   updateNpcs(): void {
     // Increment the frame counter on each update call.
     this._frameCounter++;
-    // Update movement only every 60 frames (adjust this frequency as needed).
-    if (this._frameCounter % 60 !== 0) {
+  // Update every 10 frames for testing:
+    if (this._frameCounter % 100 !== 0) {
       return;
     }
     
@@ -82,9 +110,7 @@ export class NpcService {
           // Do nothing if 'none' is chosen.
           break;
       }
-      
-      // Check the target tile based on candidate coordinates.
-      // Using Math.floor to convert world coordinates to tile indices.
+
       const targetTile = this.gameState.map[Math.floor(candidateY)]?.[Math.floor(candidateX)];
       // Define non-walkable tile types
       const nonWalkable = ['tree-tile', 'house-1'];
@@ -108,4 +134,55 @@ export class NpcService {
       }
     });
   }
+
+  updateVisibleNPCs(): void {
+    const renderDistance = 10; // Adjust as needed.
+    const playerX = this.gameState.player.x;
+    const playerY = this.gameState.player.y;
+  
+    // Loop over the houseCoordinates array.
+    // To avoid spawning repeatedly, maintain a set of processed houses.
+    if (!this._processedHouseIndices) {
+      this._processedHouseIndices = new Set<number>();
+    }
+    
+    this.gameState.houseCoordinates.forEach((house, index) => {
+      // Only consider every 10th house.
+      if (index % 10 !== 0) {
+        return;
+      }
+      // Skip if we already spawned an NPC for this house.
+      if (this._processedHouseIndices.has(index)) {
+        return;
+      }
+  
+      // Check if the house is within render distance.
+      const dx = house.x - playerX;
+      const dy = house.y - playerY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance <= renderDistance) {
+        // Check if a villager is already spawned near this house.
+        const alreadySpawned = this.npcs.some(npc =>
+          npc.type === 'villager' &&
+          Math.abs(npc.x - house.x) < 0.5 &&
+          Math.abs(npc.y - house.y) < 0.5
+        );
+        if (!alreadySpawned) {
+          // Spawn the villager.
+          this.spawnNpc({
+            type: 'villager',
+            name: 'Villager',
+            x: house.x,
+            y: house.y,
+            direction: 'right',
+            animationFrame: 0,
+            health: 100
+          });
+          // Mark this house index as processed so we don’t spawn again.
+          this._processedHouseIndices.add(index);
+        }
+      }
+    });
+  }
+  
 }

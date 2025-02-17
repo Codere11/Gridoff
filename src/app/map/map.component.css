@@ -124,33 +124,43 @@
     justify-content: center;
 }
 
-/* NPC Container for wrapping NPC and its health bar */
-.npc-container {
-    position: absolute;
-  }
+/* Common NPC container styles – this wraps the NPC image and its health bar */
+    .npc-container {
+        position: absolute;
+        width: 128px;           /* Base width (adjust as needed) */
+        height: 128px;          /* Base height */
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Allow clicks to pass through if desired */
+        z-index: 75;
+    }
   
-  /* NPC Health Bar (red background) positioned above the NPC container */
-  .npc-health-bar {
-    position: absolute;
-    top: -10px;        /* 10px above the container */
-    left: 0;
+  /* Common NPC image styling */
+  .npc {
     width: 100%;
-    height: 11px;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-size: cover; /* Adjust to 'contain' if you prefer letterboxing */
+     }
+  
+  /* Health bar styling placed above the NPC image */
+  .npc-health-bar {
+    width: 100%;
+    height: 10px;
     background-color: red;
+    border: 1px solid black;
+    margin-bottom: 2px; /* Space between health bar and NPC image */
+    box-sizing: border-box;
     z-index: 100;
   }
   
-  /* NPC Health Bar Inner (green representing current health) */
+  /* Health bar inner, which will have its width adjusted inline */
   .npc-health-bar-inner {
     height: 100%;
     background-color: green;
-    border: 1.4px solid black;
-    width: 100%; /* This is overridden inline by getNpcHealthStyle() */
+    width: 100%; /* This width can be overridden inline (e.g. via getNpcHealthStyle) */
   }
   
-  /* Trade HUD Overlay */
-/* Trade HUD Overlay */
-/* Trade HUD Overlay */
 .trade-hud {
     position: fixed;
     top: 50%;

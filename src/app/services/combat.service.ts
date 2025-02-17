@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { GameStateService } from './game-state.service';
-import { NpcService, NPC } from './npc.service';  // Import NpcService
+import { NpcService, NPC } from './npc.service';
+import { InventoryService } from './inventory.service';
 
 export interface Bullet {
   x: number;
@@ -24,6 +25,7 @@ export class CombatService {
   private gameState = inject(GameStateService);
   // Inject NpcService to access NPCs for collision
   private npcService = inject(NpcService);
+  private inventoryService = inject(InventoryService)
 
   bullets: Bullet[] = [];
   enemies: Enemy[] = [];
@@ -51,6 +53,10 @@ export class CombatService {
   fireBullet() {
     if (!this.gameState || !this.gameState.currentItem) {
       console.log("No weapon equipped!");
+      return;
+    }
+    if (!this.inventoryService.removeItem('ammo', 1)) {
+      console.log("No ammo left! Cannot fire.");
       return;
     }
     const bullet: Bullet = {

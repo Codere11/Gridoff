@@ -74,6 +74,15 @@ export class MapComponent implements OnInit {
   // For equipment selection.
   selectedSlotIndex: number | null = null;
 
+  // At the top of your MapComponent class, add:
+  currentTradeMode: 'sellTobacco' | 'buyAmmo' = 'sellTobacco';
+  showTradeHUD: boolean = false;
+  currentTrader: NPC | null = null;
+
+  // A tradeSlot to hold the item dropped for trade
+  tradeSlot: InventorySlot = { id: -1, item: null, quantity: 0 };
+
+
   // ---------------
   // Lifecycle Methods
   // ---------------
@@ -215,8 +224,10 @@ export class MapComponent implements OnInit {
   updateGameLoop() {
     this.combatService.updateBullets();
     this.npcService.updateNpcs();
+    this.npcService.updateVisibleNPCs();  // <-- spawn villagers for houses in view
     requestAnimationFrame(() => this.updateGameLoop());
   }
+  
 
   getBulletStyle(bullet: any) {
     return {
@@ -253,6 +264,8 @@ export class MapComponent implements OnInit {
     this.dragOffsetX = event.clientX - rect.left;
     this.dragOffsetY = event.clientY - rect.top;
     this.draggedStack = { item: slot.item, quantity: slot.quantity };
+    // In your onMouseDown handler, after setting this.draggedStack:
+console.log("Dragging item:", this.draggedStack.item);
     slot.item = null;
     slot.quantity = 0;
     this.dragGhostStyle = {
@@ -287,39 +300,31 @@ export class MapComponent implements OnInit {
 
     if (!this.draggedStack || event.which !== 1) return;
 
-    if (this.showTradeHUD && (event.target as HTMLElement).closest('.trade-slot')) {
-      if (this.draggedStack.item.type !== 'tobacco') {
-        console.log("Only tobacco can be placed in the trade slot.");
-        const sourceSlot = this.inventoryService.inventorySlots[this.dragSourceIndex];
-        sourceSlot.item = { ...this.draggedStack.item };
-        sourceSlot.quantity = this.draggedStack.quantity;
-        this.clearDragState();
-        return;
-      }
-      if (!this.tradeSlot.item) {
-        this.tradeSlot.item = { ...this.draggedStack.item };
-        this.tradeSlot.quantity = this.draggedStack.quantity;
-      } else if (this.tradeSlot.item.id === this.draggedStack.item.id) {
-        this.tradeSlot.quantity += this.draggedStack.quantity;
-      }
-      console.log(`Dropped ${this.draggedStack.quantity} tobacco into the trade slot.`);
-      this.clearDragState();
-      return;
-    } if (!this.draggedStack || event.which !== 1) return;
-  
-  // If trade HUD is open and drop happened inside a trade slot:
-  if (this.showTradeHUD && (event.target as HTMLElement).closest('.trade-slot')) {
-    const dragged = this.draggedStack; // Now non-null
-    if (!this.tradeSlot.item) {
-      this.tradeSlot.item = { ...dragged.item };
-      this.tradeSlot.quantity = dragged.quantity;
-    } else if (this.tradeSlot.item.id === dragged.item.id) {
-      this.tradeSlot.quantity += dragged.quantity;
-    }
-    console.log(`Dropped ${dragged.quantity} tobacco into the trade slot.`);
-    this.clearDragState();
+    // In your onMouseUp handler in map.component.ts, replace all duplicate trade-slot code with this:
+if (this.showTradeHUD && (event.target as HTMLElement).closest('.trade-slot')) {
+  console.log("Trade slot drop detected. Current mode:", this.currentTradeMode, "Dragged item type:", this.draggedStack.item.type);
+  if (this.currentTradeMode === 'sellTobacco' && this.draggedStack.item.type !== 'tobacco') {
+    console.log("Only tobacco can be placed in the trade slot for selling.");
+    this.returnDraggedItem();
     return;
   }
+  if (this.currentTradeMode === 'buyAmmo' && this.draggedStack.item.type !== 'coin') {
+    console.log("Only coins can be placed in the trade slot for buying ammo.");
+    this.returnDraggedItem();
+    return;
+  }
+  if (!this.tradeSlot.item) {
+    this.tradeSlot.item = { ...this.draggedStack.item };
+    this.tradeSlot.quantity = this.draggedStack.quantity;
+  } else if (this.tradeSlot.item.id === this.draggedStack.item.id) {
+    this.tradeSlot.quantity += this.draggedStack.quantity;
+  }
+  console.log(`Dropped ${this.draggedStack.quantity} ${this.draggedStack.item.type} into the trade slot.`);
+  this.clearDragState();
+  return;
+}
+
+
     if (!this.draggedStack || event.which !== 1) return;
     if (!this.isDragging) {
       const slot = this.inventoryService.inventorySlots[this.dragSourceIndex];
@@ -475,45 +480,69 @@ export class MapComponent implements OnInit {
 
   getNpcStyle(npc: NPC) {
     const scale = 1.5;
-    const npcSize = this.tileSize * scale;
     const cellSize = 128 * scale;
     let backgroundPosition = '';
     
-    if (npc.direction === 'left') {
-      backgroundPosition = '0px 0px';
-    } else if (npc.direction === 'right') {
-      backgroundPosition = `-${cellSize}px 0px`;
-    } else if (npc.direction === 'up') {
-      backgroundPosition = npc.animationFrame === 0 
-        ? `0px -${cellSize}px` 
-        : `-${cellSize}px -${cellSize}px`;
-    } else if (npc.direction === 'down') {
-      backgroundPosition = '0px 0px';
+    switch(npc.direction) {
+      case 'left':
+        backgroundPosition = '0px 0px';
+        break;
+      case 'right':
+        backgroundPosition = `-${cellSize}px 0px`;
+        break;
+      case 'up':
+        backgroundPosition = npc.animationFrame === 0 
+          ? `0px -${cellSize}px` 
+          : `-${cellSize}px -${cellSize}px`;
+        break;
+      case 'down':
+        backgroundPosition = '0px 0px';
+        break;
     }
     
+    let spriteUrl = "";
+    if (npc.type === 'gunSeller') {
+      spriteUrl = "url('../../assets/sprites/gun-seller-spritesheet.png')";
+    } else if (npc.type === 'villager') {
+      spriteUrl = "url('../../assets/sprites/villager-spritesheet.png')";
+    } else {
+      spriteUrl = "url('../../assets/sprites/default-npc.png')";
+    }
+
+  
     return {
       width: '100%',
       height: '100%',
-      backgroundImage: "url('assets/sprites/villager-spritesheet.png')",
+      backgroundImage: spriteUrl,
       backgroundSize: `${256 * scale}px ${256 * scale}px`,
       backgroundPosition: backgroundPosition,
       pointerEvents: 'none'
     };
   }
   
+  
+  
   getNpcContainerStyle(npc: NPC) {
-    const scale = 1.5;
-    const npcSize = this.tileSize * scale;
-    const offset = (npcSize - this.tileSize) / 2;
+    const scaleWidth = 1.5; // For width: 128 * 1.5 = 192px
+    const scaleHeight = 1.8; // For height: 128 * 1.8 = 230.4px (adjust based on your sprite)
+    const npcWidth = this.tileSize * scaleWidth;
+    const npcHeight = this.tileSize * scaleHeight;
+    // To center the NPC horizontally, offset by half the extra width.
+    const offsetX = (npcWidth - this.tileSize) / 2;
+    // For vertical alignment, you might want the feet to align with the tile's bottom.
+    // That means offset the container by the extra height.
+    const offsetY = npcHeight - this.tileSize;
+  
     return {
       position: 'absolute',
-      left: `${(npc.x - this.cameraX) * this.tileSize - offset}px`,
-      top: `${(npc.y - this.cameraY) * this.tileSize - offset}px`,
-      width: `${npcSize}px`,
-      height: `${npcSize}px`,
+      left: `${(npc.x - this.cameraX) * this.tileSize - offsetX}px`,
+      top: `${(npc.y - this.cameraY) * this.tileSize - offsetY}px`,
+      width: `${npcWidth}px`,
+      height: `${npcHeight}px`,
       zIndex: 50
     };
   }
+  
   
   getNpcHealthStyle(npc: NPC) {
     const healthPercent = npc.health ?? 100;
@@ -521,14 +550,6 @@ export class MapComponent implements OnInit {
       width: `${healthPercent}%`
     };
   }
-
-  // New properties for trading:
-  // Add these new properties at the class level
-showTradeHUD: boolean = false;
-currentTrader: NPC | null = null;
-
-// Trade slot for holding tobacco to be sold
-tradeSlot: InventorySlot = { id: -1, item: null, quantity: 0 };
 
 // Getter for trade value (each tobacco unit gives 10 coins)
 get tradeValue(): number {
@@ -538,10 +559,10 @@ get tradeValue(): number {
 }
 
 doTrade(): void {
-  if (this.tradeSlot.item && this.tradeSlot.item.type === 'tobacco' && this.tradeSlot.quantity > 0) {
-    this.sellTobacco();  // Calls your coin-dropping logic
-  } else {
-    console.log("No tobacco in the trade slot to sell.");
+  if (this.currentTradeMode === 'sellTobacco') {
+    this.sellTobacco();
+  } else if (this.currentTradeMode === 'buyAmmo') {
+    this.doTradeAmmo();
   }
 }
 
@@ -550,11 +571,19 @@ onTradeDragOver(event: DragEvent): void {
   event.preventDefault();
 }
 
+// In your onTradeDrop method (map.component.ts), ensure it's defined as follows:
 onTradeDrop(event: DragEvent): void {
   event.preventDefault();
   if (!this.draggedStack) return;
-  if (this.draggedStack.item.type !== 'tobacco') {
-    console.log("Only tobacco can be dropped in the trade slot.");
+  console.log("onTradeDrop - Current mode:", this.currentTradeMode, "Dragged item:", this.draggedStack.item);
+  if (this.currentTradeMode === 'sellTobacco' && this.draggedStack.item.type !== 'tobacco') {
+    console.log("Only tobacco can be placed in the trade slot for selling.");
+    this.returnDraggedItem();
+    return;
+  }
+  if (this.currentTradeMode === 'buyAmmo' && this.draggedStack.item.type !== 'coin') {
+    console.log("Only coins can be placed in the trade slot for buying ammo.");
+    this.returnDraggedItem();
     return;
   }
   if (!this.tradeSlot.item) {
@@ -563,16 +592,14 @@ onTradeDrop(event: DragEvent): void {
   } else if (this.tradeSlot.item.id === this.draggedStack.item.id) {
     this.tradeSlot.quantity += this.draggedStack.quantity;
   }
-  console.log(`Dropped ${this.draggedStack.quantity} tobacco into the trade slot.`);
+  console.log(`Dropped ${this.draggedStack.quantity} ${this.draggedStack.item.type} into the trade slot.`);
   this.clearDragState();
 }
-
-// (Rest of your existing code remains unchanged)
 
 
 // For testing, modify getNearbyTrader() if needed (unchanged otherwise)
 getNearbyTrader(): NPC | null {
-  const range = 4;
+  const range = 1.5; // increase for testing
   const playerX = this.gameState.player.x;
   const playerY = this.gameState.player.y;
   console.log(`Checking for trader near (${playerX}, ${playerY}) with range ${range}`);
@@ -580,8 +607,8 @@ getNearbyTrader(): NPC | null {
   const trader = this.npcService.npcs.find(npc => {
     console.log(`NPC: ${npc.name || npc.type} at (${npc.x}, ${npc.y})`);
     return npc.type === 'villager' &&
-           Math.abs(npc.x - playerX) <= range &&
-           Math.abs(npc.y - playerY) <= range;
+      Math.abs(npc.x - playerX) <= range &&
+      Math.abs(npc.y - playerY) <= range;
   });
   if (trader) {
     console.log("Found trader:", trader);
@@ -592,22 +619,51 @@ getNearbyTrader(): NPC | null {
 }
 
 sellTobacco(): void {
+  // Sum up tobacco from the tradeSlot
   const totalTobacco = this.tradeSlot.quantity;
-  const coinsEarned = totalTobacco * 10;
-  // Add coin items to the inventory
+  const coinsEarned = totalTobacco * 10; // example rate
+  // For each unit of tobacco, add a coin item to inventory.
   for (let i = 0; i < coinsEarned; i++) {
     this.inventoryService.addItemToInventory({
-      id: 6, // ensure unique id for coin
+      id: 100, // ensure a unique ID for coins
       name: 'Coin',
       type: 'coin',
       icon: '../../assets/icons/coin.png',
       stackable: true
     });
   }
-  console.log(`Traded ${totalTobacco} tobacco for ${coinsEarned} coins (as items).`);
-  // Clear the trade slot without returning items to inventory.
+  console.log(`Sold ${totalTobacco} tobacco for ${coinsEarned} coins.`);
   this.clearTradeSlot();
   this.closeTrade();
+}
+
+doTradeAmmo(): void {
+  // Sum up coins from the tradeSlot
+  const totalCoins = this.tradeSlot.quantity;
+  const ammoReceived = totalCoins * 15; // example: each coin buys 15 ammo
+  // Clear the trade slot
+  this.clearTradeSlot();
+  // Add ammo to the inventory; here we loop for simplicity.
+  for (let i = 0; i < ammoReceived; i++) {
+    this.inventoryService.addItemToInventory({
+      id: 7, // ensure a unique ID for ammo
+      name: 'Ammo',
+      type: 'ammo',
+      icon: '../../assets/icons/ammo.png',
+      stackable: true
+    });
+  }
+  console.log(`Traded ${totalCoins} coins for ${ammoReceived} ammo.`);
+  this.closeTrade();
+}
+
+returnDraggedItem(): void {
+  const sourceSlot = this.inventoryService.inventorySlots[this.dragSourceIndex];
+  if (sourceSlot) {
+    sourceSlot.item = { ...this.draggedStack!.item };
+    sourceSlot.quantity = this.draggedStack!.quantity;
+  }
+  this.clearDragState();
 }
 
 clearTradeSlot(): void {
@@ -621,6 +677,19 @@ closeTrade(): void {
   this.showTradeHUD = false;
   this.currentTrader = null;
   // (If you want a cancel action to return items, you could add a separate cancelTrade() method.)
+}
+
+onNpcClick(npc: NPC, event: MouseEvent): void {
+  event.stopPropagation();
+  // Set trade mode based on NPC type
+  if (npc.type === 'villager') {
+    this.currentTradeMode = 'sellTobacco';
+  } else if (npc.type === 'gunSeller') {
+    this.currentTradeMode = 'buyAmmo';
+  }
+  this.showTradeHUD = true;
+  this.currentTrader = npc;
+  console.log(`Opened trade HUD with ${npc.name || npc.type} in mode ${this.currentTradeMode}`);
 }
 
 }

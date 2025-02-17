@@ -26,7 +26,6 @@ export class InventoryService {
     { id: 1, item: { id: 2, name: 'shovel', type: 'shovel', icon: '../../assets/icons/shovel.png', stackable: false }, quantity: 1 },
     { id: 2, item: { id: 3, name: 'watering-an', type: 'watering-can', icon: '../../assets/icons/watering-can.png', stackable: false }, quantity: 1 },
     { id: 3, item: { id: 4, name: 'tobacco-seeds', type: 'tobacco-seeds', icon: '../../assets/icons/tobacco-seeds.png', stackable: true }, quantity: 10 },
-    { id: 4, item: null, quantity: 0 },
     { id: 5, item: null, quantity: 0 },
     { id: 6, item: null, quantity: 0 },
     { id: 7, item: null, quantity: 0 },

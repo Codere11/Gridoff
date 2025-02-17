@@ -28,12 +28,8 @@ export class GameStateService {
   spritePosition = '0px 0px';
   lastDirection = 'right';
   itemIdCounter = 0;
-
-  // --- Inventory ---
-
   
-
-  
+  public houseCoordinates: { x: number, y: number }[] = [];
 
   // --- Map Data ---
   map: { type: string, growthStage: number }[][] = [];
@@ -136,21 +132,21 @@ export class GameStateService {
 
   generateRoads() {
     for (let r = 0; r < Math.floor(Math.random() * 250) + 100; r++) {
-      let horizontal = Math.random() < 0.5;
+      const horizontal = Math.random() < 0.5;
       let x = horizontal ? 0 : Math.floor(Math.random() * this.worldSize);
       let y = horizontal ? Math.floor(Math.random() * this.worldSize) : 0;
-
       while (x < this.worldSize && y < this.worldSize) {
         if (this.map[y][x].type === 'grass') {
+          // Set a road tile:
           this.map[y][x].type = horizontal ? 'road-lr' : 'road-td';
-
+          // Occasionally place a house:
           if (Math.random() < 0.1) {
-            if (horizontal && y + 1 < this.worldSize) this.map[y + 1][x].type = 'house-1';
-            if (!horizontal && x + 1 < this.worldSize) this.map[y][x + 1].type = 'house-1';
+            this.map[y][x].type = 'house-1';
+            // Record this house's coordinate:
+            this.houseCoordinates.push({ x, y });
           }
         }
-        if (horizontal) x++;
-        else y++;
+        horizontal ? x++ : y++;
       }
     }
   }

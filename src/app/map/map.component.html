@@ -43,17 +43,19 @@
   </div>
 
   <!-- NPCs with Health Bars -->
-  <div *ngFor="let npc of npcService.npcs" class="npc-container" [ngStyle]="getNpcContainerStyle(npc)">
+  <div *ngFor="let npc of npcService.npcs" class="npc-container" [ngStyle]="getNpcContainerStyle(npc)" (click)="onNpcClick(npc, $event)">
     <div class="npc-health-bar">
       <div class="npc-health-bar-inner" [ngStyle]="getNpcHealthStyle(npc)"></div>
-    </div>
-    <div class="npc" [ngStyle]="getNpcStyle(npc)"></div>
+      </div>
+      <div class="npc" [ngStyle]="getNpcStyle(npc)"></div>
   </div>
+
 
 <!-- Trade HUD Overlay -->
 <div *ngIf="showTradeHUD" class="trade-hud" (click)="$event.stopPropagation()">
-  <h2>{{ currentTrader?.name }} Trader</h2>
-  <p>Place your tobacco in the slot to sell for coins.</p>
+  <h2>{{ currentTrader?.name }}</h2>
+  <p *ngIf="currentTradeMode === 'sellTobacco'">Place your tobacco in the slot to sell for coins.</p>
+  <p *ngIf="currentTradeMode === 'buyAmmo'">Place your coins in the slot to buy ammo.</p>
   
   <!-- Trade Input Slot (accepts drops) -->
   <div class="trade-slot" (dragover)="onTradeDragOver($event)" (drop)="onTradeDrop($event)">
@@ -65,10 +67,14 @@
   
   <!-- Trade Output Display -->
   <div class="trade-output">
-    <img class="inventory-icon" src="../assets/icons/coin.png" alt="Coin">
-    <span class="trade-value">{{ tradeValue }}</span>
+    <img *ngIf="currentTradeMode === 'sellTobacco'" class="inventory-icon" src="../assets/icons/coin.png" alt="Coin">
+    <img *ngIf="currentTradeMode === 'buyAmmo'" class="inventory-icon" src="../assets/icons/ammo.png" alt="Ammo">
+    <span class="trade-value">
+      {{ currentTradeMode === 'sellTobacco' ? (tradeSlot.quantity * 10) : (tradeSlot.quantity * 15) }}
+    </span>
   </div>
   
   <button (click)="doTrade(); $event.stopPropagation()">Trade</button>
   <button (click)="closeTrade(); $event.stopPropagation()">Close</button>
 </div>
+

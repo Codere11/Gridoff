@@ -26,6 +26,9 @@ export class MapService {
   // Game Map Data
   map: { type: string, growthStage: number }[][] = [];
 
+  // NEW: Array to record house coordinates
+  public houseCoordinates: { x: number, y: number }[] = [];
+
   constructor() {
     this.generateMap();
   }
@@ -78,18 +81,27 @@ export class MapService {
   }
 
   generateRoads() {
+    // Clear any previous house coordinates
+    this.houseCoordinates = [];
+
+    // Run a randomized loop to generate roads and houses.
     for (let r = 0; r < Math.floor(Math.random() * 250) + 100; r++) {
-      let horizontal = Math.random() < 0.5;
+      // Randomly decide if this road is horizontal or vertical.
+      const horizontal = Math.random() < 0.5;
       let x = horizontal ? 0 : Math.floor(Math.random() * this.worldSize);
       let y = horizontal ? Math.floor(Math.random() * this.worldSize) : 0;
       while (x < this.worldSize && y < this.worldSize) {
         if (this.map[y][x].type === 'grass') {
-          this.map[y][x].type = horizontal ? 'road-lr' : 'road-td';
+          // With a 10% chance, set this tile to a house and record it.
           if (Math.random() < 0.1) {
-            if (horizontal && y + 1 < this.worldSize) this.map[y + 1][x].type = 'house-1';
-            if (!horizontal && x + 1 < this.worldSize) this.map[y][x + 1].type = 'house-1';
+            this.map[y][x].type = 'house-1';
+            this.houseCoordinates.push({ x, y });
+          } else {
+            // Otherwise, set it as a road tile.
+            this.map[y][x].type = horizontal ? 'road-lr' : 'road-td';
           }
         }
+        // Advance in the chosen direction.
         horizontal ? x++ : y++;
       }
     }
