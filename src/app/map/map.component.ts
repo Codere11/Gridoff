@@ -505,6 +505,8 @@ if (this.showTradeHUD && (event.target as HTMLElement).closest('.trade-slot')) {
       spriteUrl = "url('../../assets/sprites/gun-seller-spritesheet.png')";
     } else if (npc.type === 'villager') {
       spriteUrl = "url('../../assets/sprites/villager-spritesheet.png')";
+    }else if (npc.type === 'smuggler') {
+      spriteUrl = "url('../../assets/sprites/smuggler-spritesheet.png')";
     } else {
       spriteUrl = "url('../../assets/sprites/default-npc.png')";
     }
