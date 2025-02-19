@@ -23,6 +23,7 @@ export class NpcService {
   // Inject GameStateService to access the map
   private gameState = inject(GameStateService);
   private _processedHouseIndices: Set<number> = new Set<number>();
+  private _processedGunsellerIndices: Set<number> = new Set<number>();
   constructor() {
     const playerX = 20; // or retrieve from GameStateService.player.x if available
     const playerY = 20; // or retrieve from GameStateService.player.y if available
@@ -77,7 +78,7 @@ export class NpcService {
   updateNpcs(): void {
     // Increment the frame counter on each update call.
     this._frameCounter++;
-  // Update every 10 frames for testing:
+    // Only update NPCs every 100 frames for testing:
     if (this._frameCounter % 100 !== 0) {
       return;
     }
@@ -85,12 +86,12 @@ export class NpcService {
     // Define possible directions (including a "none" option for a pause).
     const directions = ['left', 'right', 'up', 'down', 'none'];
     const movement = 0.5; // Larger step for visible movement
-
+  
     this.npcs.forEach(npc => {
       // Randomly pick one direction.
       const chosenDirection = directions[Math.floor(Math.random() * directions.length)];
-
-      // Compute candidate new coordinates
+  
+      // Compute candidate new coordinates.
       let candidateX = npc.x;
       let candidateY = npc.y;
       switch(chosenDirection) {
@@ -110,30 +111,31 @@ export class NpcService {
           // Do nothing if 'none' is chosen.
           break;
       }
-
+  
       const targetTile = this.gameState.map[Math.floor(candidateY)]?.[Math.floor(candidateX)];
-      // Define non-walkable tile types
+      // Define non-walkable tile types.
       const nonWalkable = ['tree-tile', 'house-1'];
-      
+  
       if (!targetTile || nonWalkable.includes(targetTile.type)) {
         // Movement blocked; you might log this if desired.
         console.log(`NPC movement blocked by tile: ${targetTile?.type}`);
         return; // Skip moving this NPC.
       }
       
-      // Otherwise, update NPC's position and direction.
+      // Update NPC's position and direction.
       npc.x = candidateX;
       npc.y = candidateY;
-      // Only update the direction if a movement occurred.
+      
       if (chosenDirection !== 'none') {
         npc.direction = chosenDirection as 'left' | 'right' | 'up' | 'down';
-        // For up or down, alternate the animation frame.
+        // Alternate the animation frame for vertical movement.
         if (chosenDirection === 'up' || chosenDirection === 'down') {
           npc.animationFrame = npc.animationFrame === 0 ? 1 : 0;
         }
       }
     });
   }
+  
 
   updateVisibleNPCs(): void {
     const renderDistance = 10; // Adjust as needed.
@@ -184,5 +186,59 @@ export class NpcService {
       }
     });
   }
+
+  spawnGunsellersForTables(): void {
+    const gameState = this.gameState;
+    if (gameState.gunsellerTableCoordinates && gameState.gunsellerTableCoordinates.length > 0) {
+      gameState.gunsellerTableCoordinates.forEach(coord => {
+        if (Math.random() < 0.5) { // 50% chance to spawn a gun seller at this table
+          this.spawnNpc({
+            type: 'gunSeller',
+            name: 'Gun Trader',
+            x: coord.x,
+            y: coord.y,
+            direction: 'right',
+            animationFrame: 0,
+            health: 100
+          });
+        }
+      });
+    }
+  }
+
+  updateVisibleGunsellerTables(): void {
+    const renderDistance = 12; // player's vision (e.g. 10) plus a small buffer
+    const playerX = this.gameState.player.x;
+    const playerY = this.gameState.player.y;
+  
+    // Loop through each gunseller table coordinate stored in GameStateService
+    this.gameState.gunsellerTableCoordinates.forEach((table, index) => {
+      // Skip if we've already processed this table
+      if (this._processedGunsellerIndices.has(index)) {
+        return;
+      }
+      // Calculate distance from the player to the table
+      const dx = table.x - playerX;
+      const dy = table.y - playerY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+  
+      if (distance <= renderDistance) {
+        // 50% chance to spawn a gun seller at this table
+        if (Math.random() < 0.5) {
+          this.spawnNpc({
+            type: 'gunSeller',
+            name: 'Gun Trader',
+            x: table.x,
+            y: table.y,
+            direction: 'right',
+            animationFrame: 0,
+            health: 100
+          });
+        }
+        // Mark this table as processed regardless
+        this._processedGunsellerIndices.add(index);
+      }
+    });
+  }  
   
 }

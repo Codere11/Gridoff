@@ -1,4 +1,7 @@
-import { Injectable, IterableDiffers } from '@angular/core';
+import { Injectable, IterableDiffers, inject } from '@angular/core';
+import { InventoryService } from './inventory.service';
+import { CommonModule } from '@angular/common';
+import { NpcService } from './npc.service';
 
 
 interface Item {
@@ -35,6 +38,8 @@ export class GameStateService {
   map: { type: string, growthStage: number }[][] = [];
   nonWalkableTiles = ['tree-tile', 'house-1'];
   showHUD = true;
+
+  public gunsellerTableCoordinates: { x: number, y: number }[] = [];
 
   constructor() {
     this.generateMap();
@@ -99,6 +104,7 @@ export class GameStateService {
     this.generateForests();
     this.generateRivers();
     this.generateRoads();
+    this.generateGunsellerTables();
   }
 
   generateForests() {
@@ -150,6 +156,24 @@ export class GameStateService {
       }
     }
   }
+
+  // Add this new method to your GameStateService class:
+  generateGunsellerTables(): void {
+    this.gunsellerTableCoordinates = []; // Clear any existing coordinates
+    const numberOfAttempts = Math.floor(Math.random() * 1400) + 100; // Number of attempts
+    for (let i = 0; i < numberOfAttempts; i++) {
+      const x = Math.floor(Math.random() * this.worldSize);
+      const y = Math.floor(Math.random() * this.worldSize);
+      const currentType = this.map[y][x].type;
+      // Relax condition: allow table if tile is not a house or ocean
+      if (currentType !== 'house-1' && currentType !== 'ocean') {
+        this.map[y][x].type = 'gunseller-table1';
+        this.gunsellerTableCoordinates.push({ x, y });
+      }
+    }
+    console.log('Generated gunseller tables:', this.gunsellerTableCoordinates.length);
+  }  
+
 
   // --- HUD & Rendering ---
   toggleHUD() {

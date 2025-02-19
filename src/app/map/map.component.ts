@@ -225,6 +225,7 @@ export class MapComponent implements OnInit {
     this.combatService.updateBullets();
     this.npcService.updateNpcs();
     this.npcService.updateVisibleNPCs();  // <-- spawn villagers for houses in view
+    this.npcService.updateVisibleGunsellerTables();
     requestAnimationFrame(() => this.updateGameLoop());
   }
   
@@ -265,7 +266,6 @@ export class MapComponent implements OnInit {
     this.dragOffsetY = event.clientY - rect.top;
     this.draggedStack = { item: slot.item, quantity: slot.quantity };
     // In your onMouseDown handler, after setting this.draggedStack:
-console.log("Dragging item:", this.draggedStack.item);
     slot.item = null;
     slot.quantity = 0;
     this.dragGhostStyle = {
@@ -640,7 +640,7 @@ sellTobacco(): void {
 doTradeAmmo(): void {
   // Sum up coins from the tradeSlot
   const totalCoins = this.tradeSlot.quantity;
-  const ammoReceived = totalCoins * 15; // example: each coin buys 15 ammo
+  const ammoReceived = totalCoins * 3; // example: each coin buys 15 ammo
   // Clear the trade slot
   this.clearTradeSlot();
   // Add ammo to the inventory; here we loop for simplicity.
