@@ -40,7 +40,6 @@ export class GameStateService {
   showHUD = true;
 
   public gunsellerTableCoordinates: { x: number, y: number }[] = [];
-
   constructor() {
     this.generateMap();
   }

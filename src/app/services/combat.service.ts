@@ -1,21 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { GameStateService } from './game-state.service';
 import { NpcService, NPC } from './npc.service';
-import { InventoryService } from './inventory.service';
 
 export interface Bullet {
   x: number;
   y: number;
-  direction: 'right' | 'left' | 'up' | 'down';
+  direction: 'left' | 'right' | 'up' | 'down';
   speed: number;
   damage: number;
   lifetime: number;
-}
-
-export interface Enemy {
-  x: number;
-  y: number;
-  health: number;
+  origin: 'player' | 'npc';
 }
 
 @Injectable({
@@ -23,57 +17,66 @@ export interface Enemy {
 })
 export class CombatService {
   private gameState = inject(GameStateService);
-  // Inject NpcService to access NPCs for collision
-  private npcService = inject(NpcService);
-  private inventoryService = inject(InventoryService)
+  
+  // We'll get the current NPC list from MapComponent via a setter to avoid circular dependencies.
+  private npcList: NPC[] = [];
 
-  bullets: Bullet[] = [];
-  enemies: Enemy[] = [];
+  public bullets: Bullet[] = [];
 
-  constructor() { }
-
-  spawnEnemy() {
-    // Enemy spawning logic (if needed)
+  // Called from MapComponent to update the current NPC list.
+  setNpcs(npcs: NPC[]): void {
+    this.npcList = npcs;
   }
 
-  updateEnemies() {
-    // Enemy update logic (if needed)
-  }
-
-  damageEnemy(index: number, damage: number) {
-    if (!this.enemies[index]) return;
-    this.enemies[index].health -= damage;
-    console.log(`Enemy hit! Health: ${this.enemies[index].health}`);
-    if (this.enemies[index].health <= 0) {
-      console.log("Enemy defeated!");
-      this.enemies.splice(index, 1);
-    }
-  }
-
-  fireBullet() {
-    if (!this.gameState || !this.gameState.currentItem) {
+  fireBullet(): void {
+    if (!this.gameState.currentItem) {
       console.log("No weapon equipped!");
       return;
     }
-    if (!this.inventoryService.removeItem('ammo', 1)) {
-      console.log("No ammo left! Cannot fire.");
-      return;
-    }
+    // Assume ammo removal logic is handled elsewhere
     const bullet: Bullet = {
       x: this.gameState.player.x,
       y: this.gameState.player.y,
-      direction: this.gameState.lastDirection as 'right' | 'left' | 'up' | 'down',
+      direction: this.gameState.lastDirection as 'left' | 'right' | 'up' | 'down',
       speed: 1.5,
       damage: 30,
       lifetime: 60,
+      origin: 'player'
     };
     this.bullets.push(bullet);
-    console.log("Bullet fired!", bullet);
+    console.log("Player bullet fired:", bullet);
   }
 
-  updateBullets() {
+  spawnBulletFromNpc(npc: NPC): void {
+    const player = this.gameState.player;
+    const dx = player.x - npc.x;
+    const dy = player.y - npc.y;
+    let direction: 'left' | 'right' | 'up' | 'down';
+    if (Math.abs(dx) > Math.abs(dy)) {
+      direction = dx > 0 ? 'right' : 'left';
+    } else {
+      direction = dy > 0 ? 'down' : 'up';
+    }
+    const bullet: Bullet = {
+      x: npc.x,
+      y: npc.y,
+      direction: direction,
+      speed: 1.5,
+      damage: 30,
+      lifetime: 60,
+      origin: 'npc'
+    };
+    this.bullets.push(bullet);
+    console.log("NPC bullet spawned:", bullet);
+  }
+
+  updateBullets(): void {
+    const collisionThreshold = 0.5; // adjust as needed
+    // Loop backwards so that splicing doesn't affect iteration.
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
+  
+      // Update bullet position.
       switch (bullet.direction) {
         case 'right': bullet.x += bullet.speed; break;
         case 'left': bullet.x -= bullet.speed; break;
@@ -81,40 +84,46 @@ export class CombatService {
         case 'down': bullet.y += bullet.speed; break;
       }
       bullet.lifetime--;
-
-      // Check collisions with enemies.
-      for (let j = this.enemies.length - 1; j >= 0; j--) {
-        const enemy = this.enemies[j];
-        if (Math.abs(enemy.x - bullet.x) < 0.5 && Math.abs(enemy.y - bullet.y) < 0.5) {
-          console.log(`Bullet hit enemy at (${enemy.x}, ${enemy.y})`);
-          this.damageEnemy(j, bullet.damage);
-          this.bullets.splice(i, 1);
-          break;
+  
+      let bulletHit = false;
+  
+      // Check collision with the player.
+      if (
+        Math.abs(bullet.x - this.gameState.player.x) < collisionThreshold &&
+        Math.abs(bullet.y - this.gameState.player.y) < collisionThreshold
+      ) {
+        this.gameState.player.health -= bullet.damage;
+        console.log("Player hit by bullet! New health:", this.gameState.player.health);
+        if (this.gameState.player.health <= 0) {
+          alert("Game over");
         }
+        bulletHit = true;
       }
-      
-      // Check collisions with NPCs.
-      for (let k = this.npcService.npcs.length - 1; k >= 0; k--) {
-        const npc = this.npcService.npcs[k];
-        if (Math.abs(npc.x - bullet.x) < 0.5 && Math.abs(npc.y - bullet.y) < 0.5) {
-          console.log(`Bullet hit NPC at (${npc.x}, ${npc.y})`);
+  
+      // Check collision with each NPC.
+      // (Assuming `this.npcList` is updated via setNpcs() from MapComponent.)
+      for (let j = this.npcList.length - 1; j >= 0; j--) {
+        const npc = this.npcList[j];
+        if (
+          Math.abs(bullet.x - npc.x) < collisionThreshold &&
+          Math.abs(bullet.y - npc.y) < collisionThreshold
+        ) {
           npc.health = (npc.health || 100) - bullet.damage;
+          console.log(`NPC (${npc.type}) hit by bullet! New health:`, npc.health);
           if (npc.health <= 0) {
-            console.log("NPC defeated!");
-            this.npcService.npcs.splice(k, 1);
+            console.log(`NPC (${npc.type}) defeated!`);
+            this.npcList.splice(j, 1);
           }
-          this.bullets.splice(i, 1);
-          break;
+          bulletHit = true;
+          break; // Stop checking after the bullet hits an NPC.
         }
       }
-      
-      if (bullet.lifetime <= 0) {
+  
+      if (bulletHit || bullet.lifetime <= 0) {
         this.bullets.splice(i, 1);
       }
     }
   }
-
-  checkPlayerDamage() {
-    // Existing logic if needed.
-  }
+  
+  
 }

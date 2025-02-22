@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { GameStateService } from './game-state.service';
-
-export type NpcType = 'villager' | 'seller' | 'gunSeller' | 'enemy' | 'smuggler'; // Extend as needed
+import { CombatService } from './combat.service';
+export type NpcType = 'villager' | 'seller' | 'gunSeller' | 'enemy' | 'smuggler';
 
 export interface NPC {
   id: number;
@@ -10,8 +10,11 @@ export interface NPC {
   x: number;
   y: number;
   direction: 'left' | 'right' | 'up' | 'down';
-  animationFrame: number; // For example, 0 or 1 for walking up animation
-  health?: number; // Optional: only for NPCs that have health
+  animationFrame: number;
+  health?: number;
+  // For the smuggler state machine:
+  smugglerState?: SmugglerState;
+  smugglerData?: SmugglerData;
 }
 
 @Injectable({
@@ -20,36 +23,35 @@ export interface NPC {
 export class NpcService {
   npcs: NPC[] = [];
   private _frameCounter: number = 0;
-  // Inject GameStateService to access the map
-  private gameState = inject(GameStateService);
+  // Expose gameState publicly so that state classes can access it.
+  public gameState = inject(GameStateService);
   private _processedHouseIndices: Set<number> = new Set<number>();
   private _processedGunsellerIndices: Set<number> = new Set<number>();
+  public combatService = inject(CombatService)
+
   constructor() {
-    const playerX = 20; // or retrieve from GameStateService.player.x if available
-    const playerY = 20; // or retrieve from GameStateService.player.y if available
+    const playerX = 20;
+    const playerY = 20;
+    // Spawn the smuggler; his behavior is driven by the state machine.
     this.spawnNpc({
       type: 'smuggler',
       name: 'Smuggler',
-      x: playerX + 1,  // Spawns one tile to the right of the player
+      x: playerX + 1,
       y: playerY,
       direction: 'left',
       animationFrame: 0,
       health: 100
-    });;}
+    });
+  }
 
   spawnVillagersForHouses(): void {
-    // Loop through each house coordinate
     this.gameState.houseCoordinates.forEach((coord, index) => {
-      // Only spawn a villager for every 10th house
       if (index % 10 === 0) {
-        // Optionally, add a slight offset if desired:
-        const offsetX = 0.0; 
-        const offsetY = 0.0;
         this.spawnNpc({
           type: 'villager',
           name: 'Villager',
-          x: coord.x + offsetX,
-          y: coord.y + offsetY,
+          x: coord.x,
+          y: coord.y,
           direction: 'right',
           animationFrame: 0,
           health: 100
@@ -58,7 +60,6 @@ export class NpcService {
     });
   }
   
-
   spawnNpc(initial: Partial<NPC>): void {
     const npc: NPC = {
       id: Date.now() + Math.floor(Math.random() * 1000),
@@ -76,50 +77,30 @@ export class NpcService {
   }
 
   updateNpcs(): void {
-    // Increment the frame counter on each update call.
     this._frameCounter++;
-    // Only update NPCs every 100 frames for testing:
-    if (this._frameCounter % 35 !== 0) {
-      return;
-    }
+    // Update NPCs every 28 frames.
+    if (this._frameCounter % 28 !== 0) return;
     
-    // Define possible directions (including a "none" option for a pause).
     const directions = ['left', 'right', 'up', 'down', 'none'];
-    const movement = 0.5; // Larger step for visible movement
+    const movement = 0.5;
   
     this.npcs.forEach(npc => {
       if (npc.type === 'smuggler') {
-        // For smugglers, run their own behavior update (e.g., transform grass to farmland)
         this.updateSmugglerBehavior(npc);
-        // You can also add movement logic for the smuggler here if desired.
       } else {
-        // Generic movement for other NPCs
         const chosenDirection = directions[Math.floor(Math.random() * directions.length)];
         let candidateX = npc.x;
         let candidateY = npc.y;
         switch(chosenDirection) {
-          case 'left':
-            candidateX = npc.x - movement;
-            break;
-          case 'right':
-            candidateX = npc.x + movement;
-            break;
-          case 'up':
-            candidateY = npc.y - movement;
-            break;
-          case 'down':
-            candidateY = npc.y + movement;
-            break;
-          case 'none':
-            // Do nothing if 'none' is chosen.
-            break;
+          case 'left': candidateX -= movement; break;
+          case 'right': candidateX += movement; break;
+          case 'up': candidateY -= movement; break;
+          case 'down': candidateY += movement; break;
+          case 'none': break;
         }
         const targetTile = this.gameState.map[Math.floor(candidateY)]?.[Math.floor(candidateX)];
         const nonWalkable = ['tree-tile', 'house-1'];
-        if (!targetTile || nonWalkable.includes(targetTile.type)) {
-          console.log(`NPC movement blocked by tile: ${targetTile?.type}`);
-          return;
-        }
+        if (!targetTile || nonWalkable.includes(targetTile.type)) return;
         npc.x = candidateX;
         npc.y = candidateY;
         if (chosenDirection !== 'none') {
@@ -132,41 +113,25 @@ export class NpcService {
     });
   }
   
-
   updateVisibleNPCs(): void {
-    const renderDistance = 10; // Adjust as needed.
+    const renderDistance = 10;
     const playerX = this.gameState.player.x;
     const playerY = this.gameState.player.y;
-  
-    // Loop over the houseCoordinates array.
-    // To avoid spawning repeatedly, maintain a set of processed houses.
-    if (!this._processedHouseIndices) {
-      this._processedHouseIndices = new Set<number>();
-    }
     
     this.gameState.houseCoordinates.forEach((house, index) => {
-      // Only consider every 10th house.
-      if (index % 10 !== 0) {
-        return;
-      }
-      // Skip if we already spawned an NPC for this house.
-      if (this._processedHouseIndices.has(index)) {
-        return;
-      }
+      if (index % 10 !== 0) return;
+      if (this._processedHouseIndices.has(index)) return;
   
-      // Check if the house is within render distance.
       const dx = house.x - playerX;
       const dy = house.y - playerY;
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance <= renderDistance) {
-        // Check if a villager is already spawned near this house.
         const alreadySpawned = this.npcs.some(npc =>
           npc.type === 'villager' &&
           Math.abs(npc.x - house.x) < 0.5 &&
           Math.abs(npc.y - house.y) < 0.5
         );
         if (!alreadySpawned) {
-          // Spawn the villager.
           this.spawnNpc({
             type: 'villager',
             name: 'Villager',
@@ -176,7 +141,6 @@ export class NpcService {
             animationFrame: 0,
             health: 100
           });
-          // Mark this house index as processed so we don’t spawn again.
           this._processedHouseIndices.add(index);
         }
       }
@@ -187,174 +151,74 @@ export class NpcService {
     const gameState = this.gameState;
     if (gameState.gunsellerTableCoordinates && gameState.gunsellerTableCoordinates.length > 0) {
       gameState.gunsellerTableCoordinates.forEach(coord => {
-        if (Math.random() < 0.5) { // 50% chance to spawn a gun seller at this table
-          this.spawnNpc({
-            type: 'gunSeller',
-            name: 'Gun Trader',
-            x: coord.x,
-            y: coord.y,
-            direction: 'right',
-            animationFrame: 0,
-            health: 100
-          });
-        }
+        this.spawnNpc({
+          type: 'gunSeller',
+          name: 'Gun Trader',
+          x: coord.x,
+          y: coord.y,
+          direction: 'right',
+          animationFrame: 0,
+          health: 100
+        });
       });
     }
   }
 
   updateVisibleGunsellerTables(): void {
-    const renderDistance = 12; // player's vision (e.g. 10) plus a small buffer
+    const renderDistance = 12;
     const playerX = this.gameState.player.x;
     const playerY = this.gameState.player.y;
   
-    // Loop through each gunseller table coordinate stored in GameStateService
     this.gameState.gunsellerTableCoordinates.forEach((table, index) => {
-      // Skip if we've already processed this table
-      if (this._processedGunsellerIndices.has(index)) {
-        return;
-      }
-      // Calculate distance from the player to the table
+      if (this._processedGunsellerIndices.has(index)) return;
       const dx = table.x - playerX;
       const dy = table.y - playerY;
       const distance = Math.sqrt(dx * dx + dy * dy);
-  
       if (distance <= renderDistance) {
-        // 50% chance to spawn a gun seller at this table
-        if (Math.random() < 0.5) {
-          this.spawnNpc({
-            type: 'gunSeller',
-            name: 'Gun Trader',
-            x: table.x,
-            y: table.y,
-            direction: 'right',
-            animationFrame: 0,
-            health: 100
-          });
-        }
-        // Mark this table as processed regardless
+        this.spawnNpc({
+          type: 'gunSeller',
+          name: 'Gun Trader',
+          x: table.x,
+          y: table.y,
+          direction: 'right',
+          animationFrame: 0,
+          health: 100
+        });
         this._processedGunsellerIndices.add(index);
       }
     });
   }
 
-  private updateSmugglerBehavior(smuggler: NPC): void {
-    const data = smuggler as any;
+  // ─── SMUGGLER STATE MACHINE UPDATE ───────────────────────────────
+  private updateSmugglerBehavior(npc: NPC): void {
+    const tileX = Math.floor(npc.x);
+    const tileY = Math.floor(npc.y);
     const worldSize = this.gameState.worldSize;
-    const tileX = Math.floor(smuggler.x);
-    const tileY = Math.floor(smuggler.y);
     if (tileX < 0 || tileX >= worldSize || tileY < 0 || tileY >= worldSize) return;
-    const currentTile = this.gameState.map[tileY][tileX];
-  
-    // Initialize custom properties if not already set.
-    if (data.phase === undefined) {
-      data.phase = 'grass-to-farmland';  // Start with planting: grass → farmland.
-      data.transformedCount = 0;
-      data.inventory = { tobacco: 0 };
-    }
-  
-    // If he already has 50 tobacco, finish his cycle.
+    
+    // Initialize smuggler data if not present.
+    const data: SmugglerData = npc.smugglerData || (npc.smugglerData = { inventory: { tobacco: 0 }, ammo: 0, transformedCount: 0 });
+    
+    // If tobacco is harvested, transition to TradingState (or further states).
     if (data.inventory.tobacco >= 50) {
-      data.phase = 'done';
-      console.log("Smuggler has gathered 50 tobacco and stops planting/harvesting.");
+      if (!(npc.smugglerState instanceof TradingState) &&
+          !(npc.smugglerState instanceof GunsellerTradingState) &&
+          !(npc.smugglerState instanceof CombatState)) {
+        npc.smugglerState = new TradingState();
+        console.log("Smuggler has 50 tobacco; transitioning to TradingState.");
+      }
+      npc.smugglerState.update(npc, this, data);
       return;
     }
+    
+    // Otherwise, continue with the farming cycle.
+    let state: SmugglerState = npc.smugglerState || (npc.smugglerState = new GrassToFarmlandState());
+    state.update(npc, this, data);
+  }
   
-    // --- PHASE 1: Grass → Farmland ---
-    if (data.phase === 'grass-to-farmland') {
-      if (currentTile.type === 'grass') {
-        this.gameState.map[tileY][tileX] = { type: 'farmland', growthStage: 0 };
-        data.transformedCount++;
-        console.log(`Smuggler transformed grass at (${tileX}, ${tileY}) to farmland. Count: ${data.transformedCount}`);
-        if (data.transformedCount >= 10) {
-          data.phase = 'farmland-to-tobacco';
-          data.transformedCount = 0;
-          console.log("Smuggler switching phase to farmland-to-tobacco.");
-        }
-        return;
-      }
-      const targetGrass = this.findNearestTile(tileX, tileY, worldSize, (tile) => tile.type === 'grass');
-      if (targetGrass) {
-        this.moveNPCAlongPath(smuggler, tileX, tileY, targetGrass);
-        return;
-      } else {
-        this.moveRandomly(smuggler, tileX, tileY, worldSize);
-        return;
-      }
-    }
-    // --- PHASE 2: Farmland → Tobacco (Planting) ---
-    else if (data.phase === 'farmland-to-tobacco') {
-      // First, check if there is any fully grown tobacco nearby.
-      const grown = this.findNearestTile(tileX, tileY, worldSize, (tile) => tile.type === 'tobacco-3');
-      if (grown) {
-        data.phase = 'harvesting';
-        data.targetTobacco = grown;
-        console.log(`Detected fully grown tobacco at (${grown.x}, ${grown.y}); switching to harvesting.`);
-        // Fall through to harvesting below.
-      } else {
-        // If no fully grown tobacco is found, plant new tobacco.
-        if (currentTile.type === 'farmland') {
-          this.gameState.map[tileY][tileX] = { type: 'tobacco-1', growthStage: 1 };
-          console.log(`Smuggler transformed farmland at (${tileX}, ${tileY}) to tobacco-1.`);
-          setTimeout(() => {
-            if (this.gameState.map[tileY] && this.gameState.map[tileY][tileX].type === 'tobacco-1') {
-              this.gameState.map[tileY][tileX] = { type: 'tobacco-2', growthStage: 2 };
-              console.log(`Tobacco at (${tileX}, ${tileY}) grew to tobacco-2.`);
-            }
-          }, 10000);
-          setTimeout(() => {
-            if (this.gameState.map[tileY] && this.gameState.map[tileY][tileX].type === 'tobacco-2') {
-              this.gameState.map[tileY][tileX] = { type: 'tobacco-3', growthStage: 3 };
-              console.log(`Tobacco at (${tileX}, ${tileY}) grew to tobacco-3.`);
-            }
-          }, 20000);
-          return;
-        }
-        // If not on farmland, try to move to a nearby farmland tile.
-        const targetFarmland = this.findNearestTile(tileX, tileY, worldSize, (tile) => tile.type === 'farmland');
-        if (targetFarmland) {
-          this.moveNPCAlongPath(smuggler, tileX, tileY, targetFarmland);
-          return;
-        } else {
-          // If no farmland exists, force a switch to planting grass.
-          data.phase = 'grass-to-farmland';
-          console.log("No farmland found; switching back to grass-to-farmland.");
-          return;
-        }
-      }
-    }
-    // --- PHASE 3: Harvesting Fully Grown Tobacco ---
-    if (data.phase === 'harvesting') {
-      if (currentTile.type === 'tobacco-3') {
-        const yieldAmount = Math.floor(Math.random() * 3) + 3; // 3-5 per plant
-        data.inventory.tobacco += yieldAmount;
-        console.log(`Smuggler harvested ${yieldAmount} tobacco at (${tileX}, ${tileY}). Total: ${data.inventory.tobacco}`);
-        // Reset the tile to farmland.
-        this.gameState.map[tileY][tileX] = { type: 'farmland', growthStage: 0 };
-        // After harvesting, if inventory is below 50, switch back to planting phase.
-        if (data.inventory.tobacco < 50) {
-          data.phase = 'farmland-to-tobacco';
-        } else {
-          data.phase = 'done';
-          console.log("Smuggler has gathered 50 tobacco and ends the cycle.");
-        }
-        return;
-      }
-      const targetTobacco = this.findNearestTile(tileX, tileY, worldSize, (tile) => tile.type === 'tobacco-3');
-      if (targetTobacco) {
-        data.targetTobacco = targetTobacco;
-        this.moveNPCAlongPath(smuggler, tileX, tileY, targetTobacco);
-        return;
-      } else {
-        // If no fully grown tobacco is found, return to planting.
-        data.phase = 'grass-to-farmland';
-        console.log("No fully grown tobacco found; resuming planting.");
-        return;
-      }
-    }
-  }  
-  
-  private findNearestTile(startX: number, startY: number, worldSize: number, predicate: (tile: any) => boolean): { x: number; y: number } | null {
-    const maxRadius = 15; // Increase if you want a wider search.
+  // ─── HELPER FUNCTIONS (MADE PUBLIC) ───────────────────────────────
+  public findNearestTile(startX: number, startY: number, worldSize: number, predicate: (tile: any) => boolean): { x: number; y: number } | null {
+    const maxRadius = 15;
     interface Node { x: number; y: number; dist: number; }
     const queue: Node[] = [];
     const visited: boolean[][] = [];
@@ -387,7 +251,7 @@ export class NpcService {
     return null;
   }
   
-  private moveNPCAlongPath(npc: NPC, startX: number, startY: number, target: { x: number; y: number }): void {
+  public moveNPCAlongPath(npc: NPC, startX: number, startY: number, target: { x: number; y: number }): void {
     const worldSize = this.gameState.worldSize;
     interface Node { x: number; y: number; dist: number; }
     const queue: Node[] = [];
@@ -439,11 +303,10 @@ export class NpcService {
       const dx = nextStep.x - startX;
       const dy = nextStep.y - startY;
       npc.direction = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-      console.log(`Smuggler moving toward target (${target.x}, ${target.y}). Next step: (${nextStep.x}, ${nextStep.y})`);
     }
   }
   
-  private moveRandomly(npc: NPC, tileX: number, tileY: number, worldSize: number): void {
+  public moveRandomly(npc: NPC, tileX: number, tileY: number, worldSize: number): void {
     const validMoves = [
       { dx: 0, dy: -1, dir: 'up' as const },
       { dx: 0, dy: 1, dir: 'down' as const },
@@ -461,8 +324,260 @@ export class NpcService {
       npc.x = newX + 0.5;
       npc.y = newY + 0.5;
       npc.direction = randomMove.dir;
-      console.log(`Smuggler moved randomly to (${newX}, ${newY})`);
     }
   }
-  
 }
+
+// ─── SMUGGLER STATE MACHINE INTERFACES & CLASSES ───────────────────────────
+
+// Extend smuggler data to include ammo.
+export interface SmugglerData {
+  inventory: { tobacco: number };
+  ammo: number;
+  transformedCount: number;
+  targetTobacco?: { x: number; y: number };
+  lastBulletTime?: number;
+}
+
+export interface SmugglerState {
+  name: string;
+  update(npc: NPC, service: NpcService, data: SmugglerData): void;
+}
+
+// STATE 1: Convert up to 10 grass tiles to farmland.
+class GrassToFarmlandState implements SmugglerState {
+  name = 'grass-to-farmland';
+  
+  update(npc: NPC, service: NpcService, data: SmugglerData): void {
+    const tileX = Math.floor(npc.x);
+    const tileY = Math.floor(npc.y);
+    const currentTile = service.gameState.map[tileY][tileX];
+    if (currentTile.type === 'grass') {
+      service.gameState.map[tileY][tileX] = { type: 'farmland', growthStage: 0 };
+      data.transformedCount++;
+      console.log(`Smuggler transformed grass at (${tileX}, ${tileY}) to farmland. Count: ${data.transformedCount}`);
+      if (data.transformedCount >= 10) {
+        npc.smugglerState = new FarmlandToTobaccoState();
+        data.transformedCount = 0;
+        console.log("Maximum 10 tiles reached; switching phase to farmland-to-tobacco.");
+      }
+      return;
+    }
+    const targetGrass = service.findNearestTile(tileX, tileY, service.gameState.worldSize, tile => tile.type === 'grass');
+    if (targetGrass) {
+      service.moveNPCAlongPath(npc, tileX, tileY, targetGrass);
+    } else {
+      service.moveRandomly(npc, tileX, tileY, service.gameState.worldSize);
+    }
+  }
+}
+
+// STATE 2: Plant tobacco on farmland tiles.
+class FarmlandToTobaccoState implements SmugglerState {
+  name = 'farmland-to-tobacco';
+  
+  update(npc: NPC, service: NpcService, data: SmugglerData): void {
+    const tileX = Math.floor(npc.x);
+    const tileY = Math.floor(npc.y);
+    const worldSize = service.gameState.worldSize;
+    const currentTile = service.gameState.map[tileY][tileX];
+    const grownTobacco = service.findNearestTile(tileX, tileY, worldSize, tile => tile.type === 'tobacco-3');
+    if (grownTobacco) {
+      data.targetTobacco = grownTobacco;
+      npc.smugglerState = new HarvestingState();
+      console.log(`Detected fully grown tobacco at (${grownTobacco.x}, ${grownTobacco.y}); switching to harvesting.`);
+      return;
+    }
+    if (currentTile.type === 'farmland') {
+      service.gameState.map[tileY][tileX] = { type: 'tobacco-1', growthStage: 1 };
+      console.log(`Smuggler planted tobacco at (${tileX}, ${tileY}).`);
+      setTimeout(() => {
+        if (service.gameState.map[tileY] && service.gameState.map[tileY][tileX].type === 'tobacco-1') {
+          service.gameState.map[tileY][tileX] = { type: 'tobacco-2', growthStage: 2 };
+          console.log(`Tobacco at (${tileX}, ${tileY}) grew to tobacco-2.`);
+        }
+      }, 10000);
+      setTimeout(() => {
+        if (service.gameState.map[tileY] && service.gameState.map[tileY][tileX].type === 'tobacco-2') {
+          service.gameState.map[tileY][tileX] = { type: 'tobacco-3', growthStage: 3 };
+          console.log(`Tobacco at (${tileX}, ${tileY}) grew to tobacco-3.`);
+        }
+      }, 20000);
+      return;
+    }
+    const targetFarmland = service.findNearestTile(tileX, tileY, worldSize, tile => tile.type === 'farmland');
+    if (targetFarmland) {
+      service.moveNPCAlongPath(npc, tileX, tileY, targetFarmland);
+    } else {
+      service.moveRandomly(npc, tileX, tileY, worldSize);
+    }
+  }
+}
+
+// STATE 3: Harvest tobacco from fully grown tobacco tiles.
+class HarvestingState implements SmugglerState {
+  name = 'harvesting';
+  
+  update(npc: NPC, service: NpcService, data: SmugglerData): void {
+    const tileX = Math.floor(npc.x);
+    const tileY = Math.floor(npc.y);
+    const currentTile = service.gameState.map[tileY][tileX];
+    if (currentTile.type === 'tobacco-3') {
+      const yieldAmount = Math.floor(Math.random() * 3) + 3; // 3–5 tobacco.
+      data.inventory.tobacco += yieldAmount;
+      console.log(`Smuggler harvested ${yieldAmount} tobacco at (${tileX}, ${tileY}). Total: ${data.inventory.tobacco}`);
+      service.gameState.map[tileY][tileX] = { type: 'farmland', growthStage: 0 };
+      if (data.inventory.tobacco < 50) {
+        npc.smugglerState = new FarmlandToTobaccoState();
+      } else {
+        npc.smugglerState = new TradingState();
+        console.log("Smuggler reached 50 tobacco; transitioning to TradingState.");
+      }
+      return;
+    }
+    const target = service.findNearestTile(tileX, tileY, service.gameState.worldSize, tile => tile.type === 'tobacco-3');
+    if (target) {
+      data.targetTobacco = target;
+      service.moveNPCAlongPath(npc, tileX, tileY, target);
+    } else {
+      npc.smugglerState = new FarmlandToTobaccoState();
+      console.log("No fully grown tobacco found; resuming replanting.");
+    }
+  }
+}
+
+// STATE 4: TradingState – trade all tobacco for coins with a villager.
+class TradingState implements SmugglerState {
+  name = 'trading';
+  
+  update(npc: NPC, service: NpcService, data: SmugglerData): void {
+    const searchRadius = 75; // 150x150 area (radius = 75)
+    const smugglerX = npc.x;
+    const smugglerY = npc.y;
+    let targetVillager: NPC | null = null;
+    for (const other of service.npcs) {
+      if (other.type === 'villager' && other.id !== npc.id) {
+        const dx = other.x - smugglerX;
+        const dy = other.y - smugglerY;
+        if (Math.sqrt(dx * dx + dy * dy) <= searchRadius) {
+          targetVillager = other;
+          break;
+        }
+      }
+    }
+    if (!targetVillager) {
+      console.log("No villager found for trading. Scanning...");
+      service.moveRandomly(npc, Math.floor(smugglerX), Math.floor(smugglerY), service.gameState.worldSize);
+      return;
+    }
+    const dx = targetVillager.x - smugglerX;
+    const dy = targetVillager.y - smugglerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const tradeThreshold = 1.0;
+    if (distance > tradeThreshold) {
+      service.moveNPCAlongPath(npc, Math.floor(smugglerX), Math.floor(smugglerY), { x: Math.floor(targetVillager.x), y: Math.floor(targetVillager.y) });
+      console.log("Approaching villager for trade...");
+      return;
+    }
+    let totalCoins = 0;
+    for (let i = 0; i < data.inventory.tobacco; i++) {
+      totalCoins += Math.floor(Math.random() * 3) + 3; // each tobacco yields 3–5 coins.
+    }
+    console.log(`Traded ${data.inventory.tobacco} tobacco for ${totalCoins} coins.`);
+    service.gameState.player.money += totalCoins;
+    data.inventory.tobacco = 0;
+    npc.smugglerState = new GunsellerTradingState();
+  }
+}
+
+// STATE 5: GunsellerTradingState – trade all coins for ammo with a gunseller.
+class GunsellerTradingState implements SmugglerState {
+  name = 'gunseller-trading';
+  
+  update(npc: NPC, service: NpcService, data: SmugglerData): void {
+    const searchRadius = 75;
+    const smugglerX = npc.x;
+    const smugglerY = npc.y;
+    let targetGunseller: NPC | null = null;
+    for (const other of service.npcs) {
+      if (other.type === 'gunSeller' && other.id !== npc.id) {
+        const dx = other.x - smugglerX;
+        const dy = other.y - smugglerY;
+        if (Math.sqrt(dx * dx + dy * dy) <= searchRadius) {
+          targetGunseller = other;
+          break;
+        }
+      }
+    }
+    if (!targetGunseller) {
+      console.log("No gunseller found for trading. Scanning...");
+      service.moveRandomly(npc, Math.floor(smugglerX), Math.floor(smugglerY), service.gameState.worldSize);
+      return;
+    }
+    const dx = targetGunseller.x - smugglerX;
+    const dy = targetGunseller.y - smugglerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const tradeThreshold = 1.0;
+    if (distance > tradeThreshold) {
+      service.moveNPCAlongPath(npc, Math.floor(smugglerX), Math.floor(smugglerY), { x: Math.floor(targetGunseller.x), y: Math.floor(targetGunseller.y) });
+      console.log("Approaching gunseller for trade...");
+      return;
+    }
+    const coins = service.gameState.player.money;
+    if (coins <= 0) {
+      console.log("No coins to trade for ammo. Returning to farming cycle.");
+      npc.smugglerState = new GrassToFarmlandState();
+      return;
+    }
+    let totalAmmo = 0;
+    for (let i = 0; i < coins; i++) {
+      totalAmmo += Math.floor(Math.random() * 3) + 3; // each coin yields 3–5 ammo.
+    }
+    console.log(`Traded ${coins} coins for ${totalAmmo} ammo.`);
+    // Add the ammo to the smuggler's own ammo.
+    data.ammo += totalAmmo;
+    service.gameState.player.money = 0;
+    if (data.ammo >= 300) {
+      npc.smugglerState = new CombatState();
+      console.log("Smuggler now has at least 300 ammo; transitioning to CombatState.");
+    } else {
+      npc.smugglerState = new GrassToFarmlandState();
+    }
+  }
+}
+
+// STATE 6: CombatState – when the smuggler has ≥300 ammo, actively search for the player and fire his AK.
+class CombatState implements SmugglerState {
+  name = 'combat';
+  
+  update(npc: NPC, service: NpcService, data: SmugglerData): void {
+    if (data.ammo < 300) {
+      console.log("Ammo dropped below 300; returning to farming cycle.");
+      npc.smugglerState = new GrassToFarmlandState();
+      return;
+    }
+    const playerX = service.gameState.player.x;
+    const playerY = service.gameState.player.y;
+    const dx = playerX - npc.x;
+    const dy = playerY - npc.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const approachThreshold = 3;
+    if (distance > approachThreshold) {
+      service.moveNPCAlongPath(npc, Math.floor(npc.x), Math.floor(npc.y), {
+        x: Math.floor(playerX),
+        y: Math.floor(playerY)
+      });
+      console.log("Smuggler moving towards player for combat.");
+    } else {
+      npc.direction = Math.abs(dx) > Math.abs(dy)
+        ? (dx > 0 ? 'right' : 'left')
+        : (dy > 0 ? 'down' : 'up');
+      console.log("Smuggler fires his AK at the player!");
+      data.ammo--; // Consume one ammo per shot.
+      // Remove the direct bullet spawning call here.
+      // We'll let MapComponent's updateGameLoop handle bullet spawning.
+    }
+  }
+}
+
+export { CombatState };

@@ -238,3 +238,24 @@
     padding: 2px 4px;
     border-radius: 3px;
 }
+
+/* Ensure the container for the player is positioned relative */
+.player-container {
+    position: relative;
+    width: 128px;   /* or use your desired dimensions */
+    height: 128px;  /* match the dimensions returned by getPlayerStyle() */
+    z-index: 200
+  }
+  
+  /* Health bar styles */
+  .player-health-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 5px;
+    background-color: green;
+    /* The width is set inline via getPlayerHealthStyle() */
+    border: 1px solid black;
+    z-index:210;
+  }
+  

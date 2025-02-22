@@ -4,6 +4,7 @@ import { GameStateService } from '../services/game-state.service';
 import { CombatService } from '../services/combat.service';
 import { InventoryService } from '../services/inventory.service';
 import { InteractionService, Tile, InteractionContext } from '../services/interaction.service';
+import { CombatState } from '../services/npc.service';
 import { NpcService, NPC } from '../services/npc.service';
 
 // Interfaces for items, inventory slots, and the dragged stack.
@@ -221,13 +222,30 @@ export class MapComponent implements OnInit {
     ));
   }
 
-  updateGameLoop() {
+  updateGameLoop(): void {
+    // Update the CombatService with the current NPC list.
+    this.combatService.setNpcs(this.npcService.npcs);
+  
+    // Update bullet positions and check for collisions.
     this.combatService.updateBullets();
+  
+    // Update all NPC behavior and visible NPCs.
     this.npcService.updateNpcs();
-    this.npcService.updateVisibleNPCs();  // <-- spawn villagers for houses in view
+    this.npcService.updateVisibleNPCs();
     this.npcService.updateVisibleGunsellerTables();
+  
+    // For each smuggler in CombatState, spawn a bullet.
+    this.npcService.npcs.forEach(npc => {
+      if (npc.type === 'smuggler' && npc.smugglerState instanceof CombatState) {
+        this.combatService.spawnBulletFromNpc(npc);
+      }
+    });
+  
+    // Loop the game loop.
     requestAnimationFrame(() => this.updateGameLoop());
   }
+  
+  
   
 
   getBulletStyle(bullet: any) {
@@ -250,6 +268,7 @@ export class MapComponent implements OnInit {
   getPlayerStyle() {
     return this.gameState.getPlayerStyle(this.cameraX, this.cameraY);
   }
+  
 
   onMouseDown(event: MouseEvent, index: number): void {
     event.preventDefault();
@@ -501,6 +520,14 @@ if (this.showTradeHUD && (event.target as HTMLElement).closest('.trade-slot')) {
     }
     
     let spriteUrl = "";
+
+    if (npc.type === 'smuggler') {
+      if (npc.smugglerState instanceof CombatState) {
+        spriteUrl = "url('../../assets/sprites/smuggler-gun-spritesheet.png')";
+      } else {
+        spriteUrl = "url('../../assets/sprites/smuggler-spritesheet.png')";
+      }
+    }
     if (npc.type === 'gunSeller') {
       spriteUrl = "url('../../assets/sprites/gun-seller-spritesheet.png')";
     } else if (npc.type === 'villager') {
@@ -694,4 +721,18 @@ onNpcClick(npc: NPC, event: MouseEvent): void {
   console.log(`Opened trade HUD with ${npc.name || npc.type} in mode ${this.currentTradeMode}`);
 }
 
+getPlayerHealthStyle(): any {
+  const healthPercent = this.gameState.player.health || 100;
+  return {
+    width: `${healthPercent}%`,
+    height: '5px',
+    backgroundColor: 'green',
+    position: 'absolute',
+    bottom: '0',
+    left: '0'
+  };
 }
+
+
+}
+

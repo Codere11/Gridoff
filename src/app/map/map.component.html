@@ -10,7 +10,9 @@
   </div>
 
   <!-- Player -->
-  <div class="player" [ngStyle]="getPlayerStyle()"></div>
+  <div class="player" [ngStyle]="getPlayerStyle()">
+    <div class="player-health-bar" [ngStyle]="getPlayerHealthStyle()"></div>
+  </div>
 
   <!-- HUD (Health, Money, Coordinates) -->
   <div class="top-left-coordinates">
