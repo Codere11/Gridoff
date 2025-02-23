@@ -27,21 +27,12 @@ export class NpcService {
   public gameState = inject(GameStateService);
   private _processedHouseIndices: Set<number> = new Set<number>();
   private _processedGunsellerIndices: Set<number> = new Set<number>();
+  private _processedTobaccoIndices: Set<number> = new Set<number>();
   public combatService = inject(CombatService)
 
   constructor() {
     const playerX = 20;
     const playerY = 20;
-    // Spawn the smuggler; his behavior is driven by the state machine.
-    this.spawnNpc({
-      type: 'smuggler',
-      name: 'Smuggler',
-      x: playerX + 1,
-      y: playerY,
-      direction: 'left',
-      animationFrame: 0,
-      health: 100
-    });
   }
 
   spawnVillagersForHouses(): void {
@@ -185,6 +176,34 @@ export class NpcService {
           health: 100
         });
         this._processedGunsellerIndices.add(index);
+      }
+    });
+  }
+
+  spawnSmugglersAtTobaccoTables(): void {
+    const renderDistance = 12;
+    const playerX = this.gameState.player.x;
+    const playerY = this.gameState.player.y;
+    
+    this.gameState.tobaccoTableCoordinates.forEach((coord, index) => {
+      if (this._processedTobaccoIndices.has(index)) return;
+      
+      const dx = coord.x - playerX;
+      const dy = coord.y - playerY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance <= renderDistance) {
+        // Always spawn a smuggler for every tobacco table in range:
+        this.spawnNpc({
+          type: 'smuggler',
+          name: 'smuggler',
+          x: coord.x + 0.5, // center on the tile
+          y: coord.y + 0.5,
+          direction: 'left',
+          animationFrame: 0,
+          health: 100
+        });
+        this._processedTobaccoIndices.add(index);
       }
     });
   }

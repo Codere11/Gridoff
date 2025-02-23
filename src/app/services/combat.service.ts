@@ -51,6 +51,7 @@ export class CombatService {
     const player = this.gameState.player;
     const dx = player.x - npc.x;
     const dy = player.y - npc.y;
+    
     let direction: 'left' | 'right' | 'up' | 'down';
     if (Math.abs(dx) > Math.abs(dy)) {
       direction = dx > 0 ? 'right' : 'left';

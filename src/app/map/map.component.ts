@@ -233,6 +233,7 @@ export class MapComponent implements OnInit {
     this.npcService.updateNpcs();
     this.npcService.updateVisibleNPCs();
     this.npcService.updateVisibleGunsellerTables();
+    this.npcService.spawnSmugglersAtTobaccoTables();
   
     // For each smuggler in CombatState, spawn a bullet.
     this.npcService.npcs.forEach(npc => {
@@ -497,47 +498,35 @@ if (this.showTradeHUD && (event.target as HTMLElement).closest('.trade-slot')) {
     }
   }
 
-  getNpcStyle(npc: NPC) {
+  getNpcStyle(npc: NPC): any {
     const scale = 1.5;
     const cellSize = 128 * scale;
     let backgroundPosition = '';
     
-    switch(npc.direction) {
-      case 'left':
-        backgroundPosition = '0px 0px';
-        break;
-      case 'right':
-        backgroundPosition = `-${cellSize}px 0px`;
-        break;
+    switch (npc.direction) {
+      case 'left': backgroundPosition = '0px 0px'; break;
+      case 'right': backgroundPosition = `-${cellSize}px 0px`; break;
       case 'up':
         backgroundPosition = npc.animationFrame === 0 
           ? `0px -${cellSize}px` 
           : `-${cellSize}px -${cellSize}px`;
         break;
-      case 'down':
-        backgroundPosition = '0px 0px';
-        break;
+      case 'down': backgroundPosition = '0px 0px'; break;
     }
     
     let spriteUrl = "";
-
     if (npc.type === 'smuggler') {
-      if (npc.smugglerState instanceof CombatState) {
-        spriteUrl = "url('../../assets/sprites/smuggler-gun-spritesheet.png')";
-      } else {
-        spriteUrl = "url('../../assets/sprites/smuggler-spritesheet.png')";
-      }
-    }
-    if (npc.type === 'gunSeller') {
+      // Check if the smuggler is in CombatState.
+      spriteUrl = (npc.smugglerState instanceof CombatState)
+        ? "url('../../assets/sprites/smuggler-gun-spritesheet.png')"
+        : "url('../../assets/sprites/smuggler-spritesheet.png')";
+    } else if (npc.type === 'gunSeller') {
       spriteUrl = "url('../../assets/sprites/gun-seller-spritesheet.png')";
     } else if (npc.type === 'villager') {
       spriteUrl = "url('../../assets/sprites/villager-spritesheet.png')";
-    }else if (npc.type === 'smuggler') {
-      spriteUrl = "url('../../assets/sprites/smuggler-spritesheet.png')";
     } else {
       spriteUrl = "url('../../assets/sprites/default-npc.png')";
     }
-
   
     return {
       width: '100%',
@@ -547,9 +536,7 @@ if (this.showTradeHUD && (event.target as HTMLElement).closest('.trade-slot')) {
       backgroundPosition: backgroundPosition,
       pointerEvents: 'none'
     };
-  }
-  
-  
+  }  
   
   getNpcContainerStyle(npc: NPC) {
     const scaleWidth = 1.5; // For width: 128 * 1.5 = 192px

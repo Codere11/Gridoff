@@ -22,7 +22,7 @@ interface InventorySlot {
 })
 export class GameStateService {
   tileSize = 128;
-  worldSize = 1000;
+  worldSize = 3000;
 
   // --- Player State ---
   player = { x: 20, y: 20, health: 100, money: 0, ammo: 10 };
@@ -33,6 +33,7 @@ export class GameStateService {
   itemIdCounter = 0;
   
   public houseCoordinates: { x: number, y: number }[] = [];
+  public tobaccoTableCoordinates: { x: number, y: number }[] = [];
 
   // --- Map Data ---
   map: { type: string, growthStage: number }[][] = [];
@@ -104,6 +105,7 @@ export class GameStateService {
     this.generateRivers();
     this.generateRoads();
     this.generateGunsellerTables();
+    this.generateTobaccoTables();
   }
 
   generateForests() {
@@ -136,7 +138,7 @@ export class GameStateService {
   }
 
   generateRoads() {
-    for (let r = 0; r < Math.floor(Math.random() * 250) + 100; r++) {
+    for (let r = 0; r < Math.floor(Math.random() * 2500) + 100; r++) {
       const horizontal = Math.random() < 0.5;
       let x = horizontal ? 0 : Math.floor(Math.random() * this.worldSize);
       let y = horizontal ? Math.floor(Math.random() * this.worldSize) : 0;
@@ -159,7 +161,7 @@ export class GameStateService {
   // Add this new method to your GameStateService class:
   generateGunsellerTables(): void {
     this.gunsellerTableCoordinates = []; // Clear any existing coordinates
-    const numberOfAttempts = Math.floor(Math.random() * 1400) + 100; // Number of attempts
+    const numberOfAttempts = Math.floor(Math.random() * 10000) + 100; // Number of attempts
     for (let i = 0; i < numberOfAttempts; i++) {
       const x = Math.floor(Math.random() * this.worldSize);
       const y = Math.floor(Math.random() * this.worldSize);
@@ -172,6 +174,30 @@ export class GameStateService {
     }
     console.log('Generated gunseller tables:', this.gunsellerTableCoordinates.length);
   }  
+
+  generateTobaccoTables(): void {
+    // Clear any previous tobacco table coordinates.
+    this.tobaccoTableCoordinates = [];
+    // For example, try a fixed number of placements (adjust as needed)
+    const numberOfAttempts = Math.floor(Math.random() * 8000) + 50;
+    for (let i = 0; i < numberOfAttempts; i++) {
+      const x = Math.floor(Math.random() * this.worldSize);
+      const y = Math.floor(Math.random() * this.worldSize);
+      const currentType = this.map[y][x].type;
+      // Only allow placement on tiles that are not houses, oceans, or already other special tiles.
+      if (currentType !== 'house-1' &&
+          currentType !== 'ocean' &&
+          currentType !== 'gunseller-table1' &&
+          currentType !== 'tobacco-table') {
+        // With a given chance (e.g. 20%), convert this tile into a tobacco-table.
+        if (Math.random() < 0.2) {
+          this.map[y][x].type = 'tobacco-table';
+          this.tobaccoTableCoordinates.push({ x, y });
+        }
+      }
+    }
+    console.log('Generated tobacco table tiles:', this.tobaccoTableCoordinates.length);
+  }
 
 
   // --- HUD & Rendering ---
