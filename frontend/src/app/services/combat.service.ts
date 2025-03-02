@@ -1,113 +1,128 @@
 import { Injectable, inject } from '@angular/core';
 import { GameStateService } from './game-state.service';
+import { NpcService, NPC } from './npc.service';
 
 export interface Bullet {
   x: number;
   y: number;
-  direction: 'right' | 'left' | 'up' | 'down';
+  direction: 'left' | 'right' | 'up' | 'down';
   speed: number;
   damage: number;
   lifetime: number;
+  origin: 'player' | 'npc';
 }
 
 @Injectable({
   providedIn: 'root'
 })
-
 export class CombatService {
-
-  gameState = inject(GameStateService);
-
-  bullets: Bullet[] = []
-  enemies: { x: number, y: number, health: number }[] = [];
-
-  constructor() {
-    this.spawnEnemy(); // ✅ Spawn an enemy at start
-  }
-
-  // --- SPAWN AN ENEMY AT (5,5) ---
-  spawnEnemy() {
-    this.enemies.push({ x: 5, y: 5, health: 100 });
-    console.log("👾 Enemy Spawned at (5,5):", this.enemies[0]);
-  }
-
-  // --- MOVE ENEMIES TOWARD PLAYER ---
-  updateEnemies() {
-    this.enemies.forEach(enemy => {
-      if (enemy.x < 20) enemy.x += 0.1;
-      if (enemy.x > 20) enemy.x -= 0.1;
-      if (enemy.y < 20) enemy.y += 0.1;
-      if (enemy.y > 20) enemy.y -= 0.1;
-    });
-  }
-
-  // --- DAMAGE ENEMY ---
-  damageEnemy(index: number, damage: number) {
-    if (!this.enemies[index]) return;
+  private gameState = inject(GameStateService);
   
-    this.enemies[index].health -= damage;
-    console.log(`💥 Enemy hit! Health: ${this.enemies[index].health}`);
-  
-    if (this.enemies[index].health <= 0) {
-      console.log("💀 Enemy defeated!");
-      this.enemies.splice(index, 1); // ✅ Remove dead enemy
-    }
-  }
-  
+  // We'll get the current NPC list from MapComponent via a setter to avoid circular dependencies.
+  private npcList: NPC[] = [];
 
-  // --- FIRE A BULLET ---
-  fireBullet() {
-    if (!this.gameState.currentWeapon) {
-      console.log("❌ No weapon equipped!");
+  public bullets: Bullet[] = [];
+
+  // Called from MapComponent to update the current NPC list.
+  setNpcs(npcs: NPC[]): void {
+    this.npcList = npcs;
+  }
+
+  fireBullet(): void {
+    if (!this.gameState.currentItem) {
+      console.log("No weapon equipped!");
       return;
     }
-  
+    // Assume ammo removal logic is handled elsewhere
     const bullet: Bullet = {
       x: this.gameState.player.x,
       y: this.gameState.player.y,
-      direction: this.gameState.lastDirection as 'right' | 'left' | 'up' | 'down',
-      speed: 1, // Adjust speed if too slow
+      direction: this.gameState.lastDirection as 'left' | 'right' | 'up' | 'down',
+      speed: 1.5,
       damage: 30,
-      lifetime: 50,
+      lifetime: 60,
+      origin: 'player'
     };
-  
     this.bullets.push(bullet);
-    console.log("🔥 Bullet fired! Bullets now:", this.bullets);
+    console.log("Player bullet fired:", bullet);
   }
-  
 
-  // --- UPDATE BULLETS & CHECK COLLISIONS ---
-  updateBullets() {
-    if (this.bullets.length === 0) return;
+  spawnBulletFromNpc(npc: NPC): void {
+    const player = this.gameState.player;
+    const dx = player.x - npc.x;
+    const dy = player.y - npc.y;
+    
+    let direction: 'left' | 'right' | 'up' | 'down';
+    if (Math.abs(dx) > Math.abs(dy)) {
+      direction = dx > 0 ? 'right' : 'left';
+    } else {
+      direction = dy > 0 ? 'down' : 'up';
+    }
+    const bullet: Bullet = {
+      x: npc.x,
+      y: npc.y,
+      direction: direction,
+      speed: 1.5,
+      damage: 30,
+      lifetime: 60,
+      origin: 'npc'
+    };
+    this.bullets.push(bullet);
+    console.log("NPC bullet spawned:", bullet);
+  }
+
+  updateBullets(): void {
+    const collisionThreshold = 0.5; // adjust as needed
+    // Loop backwards so that splicing doesn't affect iteration.
+    for (let i = this.bullets.length - 1; i >= 0; i--) {
+      const bullet = this.bullets[i];
   
-    for (let bulletIndex = this.bullets.length - 1; bulletIndex >= 0; bulletIndex--) {
-      let bullet: Bullet = this.bullets[bulletIndex];
-  
+      // Update bullet position.
       switch (bullet.direction) {
         case 'right': bullet.x += bullet.speed; break;
         case 'left': bullet.x -= bullet.speed; break;
         case 'up': bullet.y -= bullet.speed; break;
         case 'down': bullet.y += bullet.speed; break;
       }
-  
       bullet.lifetime--;
   
-      // ✅ Check if the bullet hits an enemy
-      for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex--) {
-        let enemy = this.enemies[enemyIndex];
+      let bulletHit = false;
   
-        if (Math.abs(enemy.x - bullet.x) < 1 && Math.abs(enemy.y - bullet.y) < 1) {
-          console.log(`💥 Bullet hit enemy at (${enemy.x}, ${enemy.y})!`);
-          this.damageEnemy(enemyIndex, bullet.damage);
-          this.bullets.splice(bulletIndex, 1); // ✅ Remove bullet after impact
-          break;
-        }        
+      // Check collision with the player.
+      if (
+        Math.abs(bullet.x - this.gameState.player.x) < collisionThreshold &&
+        Math.abs(bullet.y - this.gameState.player.y) < collisionThreshold
+      ) {
+        this.gameState.player.health -= bullet.damage;
+        console.log("Player hit by bullet! New health:", this.gameState.player.health);
+        if (this.gameState.player.health <= 0) {
+          alert("Game over");
+        }
+        bulletHit = true;
       }
   
-      if (bullet.lifetime <= 0) {
-        this.bullets.splice(bulletIndex, 1);
+      // Check collision with each NPC.
+      // (Assuming `this.npcList` is updated via setNpcs() from MapComponent.)
+      for (let j = this.npcList.length - 1; j >= 0; j--) {
+        const npc = this.npcList[j];
+        if (
+          Math.abs(bullet.x - npc.x) < collisionThreshold &&
+          Math.abs(bullet.y - npc.y) < collisionThreshold
+        ) {
+          npc.health = (npc.health || 100) - bullet.damage;
+          console.log(`NPC (${npc.type}) hit by bullet! New health:`, npc.health);
+          if (npc.health <= 0) {
+            console.log(`NPC (${npc.type}) defeated!`);
+            this.npcList.splice(j, 1);
+          }
+          bulletHit = true;
+          break; // Stop checking after the bullet hits an NPC.
+        }
       }
-      console.log(`🔄 Checking bullet at (${bullet.x}, ${bullet.y}) against enemies:`, this.enemies);
+  
+      if (bulletHit || bullet.lifetime <= 0) {
+        this.bullets.splice(i, 1);
+      }
     }
   }
   

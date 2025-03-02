@@ -1,49 +1,109 @@
 <div class="game-container">
   <!-- Game Map -->
-<div class="map">
-  <div *ngFor="let y of [].constructor(visibleTilesY); let rowIndex = index">
-    <div *ngFor="let x of [].constructor(visibleTilesX); let colIndex = index"
-         class="tile"
-         [ngStyle]="getTileStyle(cameraX + colIndex, cameraY + rowIndex)">
+  <div class="map">
+    <div *ngFor="let y of [].constructor(visibleTilesY); let rowIndex = index">
+      <div *ngFor="let x of [].constructor(visibleTilesX); let colIndex = index"
+           class="tile"
+           [ngStyle]="getTileStyle(cameraX + colIndex, cameraY + rowIndex)">
+      </div>
+
+      <div *ngFor="let npc of npcService.npcs" class="npc-container" [ngStyle]="getNpcContainerStyle(npc)" (click)="onNpcClick(npc, $event)">
+        <div class="npc-health-bar">
+          <div class="npc-health-bar-inner" [ngStyle]="getNpcHealthStyle(npc)"></div>
+          </div>
+          <div class="npc" [ngStyle]="getNpcStyle(npc)"></div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
+  <!-- Chat Input: Fixed at the top center -->
+  <div class="chat-input-container">
+    <input class="chat-input"
+           type="text"
+           placeholder="Type your message..."
+           [(ngModel)]="chatInput"
+           (keydown.enter)="sendChatMessage()"
+           (focus)="onChatFocus()"
+           (blur)="onChatBlur()">
+  </div>  
 
-  
-  
-
-  <!-- Player -->
-  <div class="player" [ngStyle]="getPlayerStyle()"></div>
-
-  <!-- HUD (Health, Money) -->
-<div *ngIf="showHUD" class="stats">
-  <p> Health: {{ gameState.player.health }} |</p>
-  <p> | Money: {{ money }}</p>
-</div>
-
-<!-- Inventory -->
-<div class="inventory">
-  <div *ngFor="let item of inventoryItems" class="inventory-slot" (click)="equipWeapon(item.type)">
-    <img class="inventory-icon" [src]="item.icon" [alt]="item.name">
+<!-- Chat Messages: Fixed at the top right -->
+<div class="chat-messages-container">
+  <div *ngFor="let msg of chatMessages" class="chat-message">
+    <strong>{{ msg.sender }}:</strong> {{ msg.text }}
   </div>
 </div>
 
+<!-- ... the rest of your existing template -->
+
+
+  <!-- Place this at the top-middle of your game container -->
+<div class="zone-message" *ngIf="zoneMessage">
+  {{ zoneMessage }}
+</div>
+
+  <!-- Player -->
+  <div class="player" [ngStyle]="getPlayerStyle()">
+    <div class="player-health-bar" [ngStyle]="getPlayerHealthStyle()"></div>
+  </div>
+
+  <!-- HUD (Health, Money, Coordinates) -->
+  <div class="top-left-coordinates">
+    {{ playerCoordinates }}
+  </div>
+
+  <!-- Inventory -->
+  <div class="inventory" [class.inventory-open]="inventoryOpen">
+    <div *ngFor="let slot of inventoryService.inventorySlots; let i = index; trackBy: trackBySlot"
+         class="inventory-slot"
+         (mousedown)="onMouseDown($event, i)"
+         [attr.data-index]="i">
+      <img *ngIf="slot.item" class="inventory-icon" [src]="slot.item.icon" [alt]="slot.item.name">
+      <span *ngIf="slot.quantity > 1" class="stack-quantity">{{ slot.quantity }}</span>
+    </div>
+  </div>
+
+  <!-- Ghost element (for drag & drop) -->
+  <div *ngIf="draggedStack" class="drag-ghost" [ngStyle]="dragGhostStyle">
+    <img *ngIf="draggedStack.item" class="inventory-icon"
+         [src]="draggedStack.item.icon"
+         [alt]="draggedStack.item.name">
+    <span *ngIf="draggedStack.quantity > 1" class="stack-quantity">{{ draggedStack.quantity }}</span>
+  </div>
+
+  <!-- Bullets -->
+  <div *ngFor="let bullet of combatService.bullets" 
+       class="bullet"
+       [ngStyle]="getBulletStyle(bullet)">
+  </div>
+
+
+
+<!-- Trade HUD Overlay -->
+<div *ngIf="showTradeHUD" class="trade-hud" (click)="$event.stopPropagation()">
+  <h2>{{ currentTrader?.name }}</h2>
+  <p *ngIf="currentTradeMode === 'sellTobacco'">Place your tobacco in the slot to sell for coins.</p>
+  <p *ngIf="currentTradeMode === 'buyAmmo'">Place your coins in the slot to buy ammo.</p>
   
-<!-- Enemies -->
-<div *ngFor="let enemy of combatService.enemies" 
-     class="enemy"
-     [ngStyle]="getEnemyStyle(enemy)">
-  <p class="health-bar">❤️ {{ enemy.health }}</p>
+  <!-- Trade Input Slot (accepts drops) -->
+  <div class="trade-slot" (dragover)="onTradeDragOver($event)" (drop)="onTradeDrop($event)">
+    <div class="trade-slot-inner">
+      <img *ngIf="tradeSlot.item" class="inventory-icon" [src]="tradeSlot.item.icon" [alt]="tradeSlot.item.name">
+      <span *ngIf="tradeSlot.quantity > 1" class="stack-quantity">{{ tradeSlot.quantity }}</span>
+    </div>
+  </div>
+  
+  <!-- Trade Output Display -->
+  <div class="trade-output">
+    <img *ngIf="currentTradeMode === 'sellTobacco'" class="inventory-icon" src="../assets/icons/coin.png" alt="Coin">
+    <img *ngIf="currentTradeMode === 'buyAmmo'" class="inventory-icon" src="../assets/icons/ammo.png" alt="Ammo">
+    <span class="trade-value">
+      {{ currentTradeMode === 'sellTobacco' ? (tradeSlot.quantity * 10) : (tradeSlot.quantity * 15) }}
+    </span>
+  </div>
+  
+  <button (click)="doTrade(); $event.stopPropagation()">Trade</button>
+  <button (click)="closeTrade(); $event.stopPropagation()">Close</button>
 </div>
 
-
-<!-- Bullets -->
-<div *ngFor="let bullet of combatService.bullets" 
-     class="bullet"
-     [ngStyle]="getBulletStyle(bullet)">
-</div>
-
-
-
-</div>
