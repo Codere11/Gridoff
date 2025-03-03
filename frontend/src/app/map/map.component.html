@@ -6,13 +6,13 @@
            class="tile"
            [ngStyle]="getTileStyle(cameraX + colIndex, cameraY + rowIndex)">
       </div>
-
+  
       <div *ngFor="let npc of npcService.npcs" class="npc-container" [ngStyle]="getNpcContainerStyle(npc)" (click)="onNpcClick(npc, $event)">
+        <div class="npc-name">{{ npc.name || (npc.type.charAt(0).toUpperCase() + npc.type.slice(1)) }}</div>
         <div class="npc-health-bar">
           <div class="npc-health-bar-inner" [ngStyle]="getNpcHealthStyle(npc)"></div>
-          </div>
-          <div class="npc" [ngStyle]="getNpcStyle(npc)"></div>
         </div>
+        <div class="npc" [ngStyle]="getNpcStyle(npc)"></div>
       </div>
     </div>
   </div>

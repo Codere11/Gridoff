@@ -322,3 +322,17 @@
     z-index: 100;
   }
   
+
+  .npc-name {
+    position: absolute;
+    top: -45px; /* Above the health bar */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7); /* Slightly transparent black */
+    color: white;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    z-index: 100;
+  }

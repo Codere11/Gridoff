@@ -45,6 +45,29 @@ export class NpcService {
     const playerY = 20;
   }
 
+  private namePool = [
+    'Janez', 'Jaka', 'Andrej', 'Oliver', 'Mujo', 'Albert', 'Matevz', 'Viktor',
+    'Mason', 'Maks', 'Zdravko', 'Marko', 'Luka', 'Charles', 'Yuri', 'Arnold'
+  ];
+
+  initializeNpcs(): void {
+    const types: NpcType[] = ['warlord', 'villager', 'soldier', 'smuggler'];
+    this.npcs = Array.from({ length: 10 }, (_, i) => {
+      const type = types[Math.floor(Math.random() * types.length)] as NpcType;
+      const firstName = this.namePool[Math.floor(Math.random() * this.namePool.length)];
+      return {
+        id: i + 1,
+        type: type,
+        name: `${firstName} - ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+        x: Math.random() * 2000,
+        y: Math.random() * 2000,
+        direction: 'right',
+        animationFrame: 0,
+        health: Math.floor(Math.random() * 100) + 50
+      };
+    });
+  }
+
   spawnVillagersForHouses(): void {
     this.gameState.houseCoordinates.forEach((coord, index) => {
       if (index % 10 === 0) {
@@ -65,7 +88,11 @@ export class NpcService {
     const npc: NPC = {
       id: Date.now() + Math.floor(Math.random() * 1000),
       type: initial.type || 'villager',
-      name: initial.name,
+      name: initial.name || (() => {
+        const defaultType = initial.type || 'NPC';
+        const firstName = this.namePool[Math.floor(Math.random() * this.namePool.length)];
+        return `${firstName} - ${defaultType.charAt(0).toUpperCase() + defaultType.slice(1)}`;
+      })(),
       x: initial.x ?? 20,
       y: initial.y ?? 20,
       direction: initial.direction || 'right',
@@ -282,32 +309,29 @@ export class NpcService {
 
   spawnWarlords(): void {
     const seeds: { faction: number; x: number; y: number; hqType: string }[] = [
-      { faction: 0, x: 500,  y: 350,  hqType: 'hq-ak' },
-      { faction: 1, x: 1300, y: 800,  hqType: 'hq-coin' },
+      { faction: 0, x: 500, y: 350, hqType: 'hq-ak' },
+      { faction: 1, x: 1300, y: 800, hqType: 'hq-coin' },
       { faction: 2, x: 1500, y: 2500, hqType: 'hq-sword' },
-      { faction: 3, x: 800,  y: 1500, hqType: 'hq-tobacco' },
+      { faction: 3, x: 800, y: 1500, hqType: 'hq-tobacco' },
       { faction: 4, x: 2200, y: 1500, hqType: 'hq-wolf' }
     ];
   
     seeds.forEach(seed => {
-      // Derive faction name by removing "hq-" from hqType:
       const factionName = seed.hqType.replace('hq-', '');
-      // Build the sprite path based on the faction:
-      const spritePath = `assets/sprites/warlord-${factionName}-gun.png`;
-      // Spawn the warlord. You may adjust health, initial direction, etc.
+      const firstName = this.namePool[Math.floor(Math.random() * this.namePool.length)];
       this.spawnNpc({
         type: 'warlord',
-        name: `Warlord ${factionName.toUpperCase()}`,
+        name: `${firstName} - Warlord`, // Random name + role
         x: seed.x,
         y: seed.y,
-        direction: 'right', // default starting direction; adjust as needed
+        direction: 'right',
         animationFrame: 0,
         health: 100,
-        sprite: spritePath  // custom property for your rendering logic
+        faction: seed.faction,
+        sprite: `assets/sprites/warlord-${factionName}-gun.png`
       });
     });
   }
-  
   
   public moveNPCAlongPath(npc: NPC, startX: number, startY: number, target: { x: number; y: number }): void {
     const worldSize = this.gameState.worldSize;
@@ -391,25 +415,24 @@ spawnSoldiersAtTents(): void {
   const renderDistance = 12;
   const playerX = this.gameState.player.x;
   const playerY = this.gameState.player.y;
-  
+
   this.gameState.tentPositions.forEach((tent, index) => {
     const dx = tent.x - playerX;
     const dy = tent.y - playerY;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
+
     if (distance <= renderDistance && !this._processedTentIndices.has(index)) {
-      // Check if this tent is an HQ by looking at the map tile
       const tile = this.gameState.map[tent.y][tent.x];
       const isHQ = tile.type.startsWith('hq-');
       const soldierCount = isHQ ? 3 : 1;
-      
-      const faction = tent.faction; // Always available from tentPositions
-      
+      const faction = tent.faction;
+
       for (let i = 0; i < soldierCount; i++) {
         const offsetX = (i - (soldierCount - 1) / 2) * 0.3;
+        const firstName = this.namePool[Math.floor(Math.random() * this.namePool.length)];
         this.spawnNpc({
           type: 'soldier',
-          name: `Soldier ${faction}`,
+          name: `${firstName} - Soldier`, // Random name + role
           x: tent.x + offsetX,
           y: tent.y,
           direction: 'right',
@@ -419,7 +442,7 @@ spawnSoldiersAtTents(): void {
         });
         console.log(`Spawned soldier ${i + 1} at (${tent.x + offsetX}, ${tent.y}) for faction ${faction}`);
       }
-      
+
       this._processedTentIndices.add(index);
     }
   });

@@ -918,17 +918,18 @@ getPlayerHealthStyle(): any {
       if (this.npcService.npcs.length > 0) {
         const randomNPC = this.npcService.npcs[Math.floor(Math.random() * this.npcService.npcs.length)];
         const npcType = randomNPC.type;
+        const npcName = randomNPC.name || (npcType.charAt(0).toUpperCase() + npcType.slice(1));
         const npcTypeFormatted = npcType.charAt(0).toUpperCase() + npcType.slice(1);
         this.http.post('http://localhost:5000/chat', {
           npcType: npcTypeFormatted,
           userInput: this.chatInput
         }).subscribe({
           next: (response: any) => {
-            this.chatMessages.push({ sender: npcTypeFormatted, text: response.reply });
+            this.chatMessages.push({ sender: npcName, text: response.reply });
           },
           error: (err) => {
             console.error(`Error: ${err.message}`);
-            this.chatMessages.push({ sender: npcTypeFormatted, text: "I’m malfunctioning—sorry!" });
+            this.chatMessages.push({ sender: npcName, text: "I’m malfunctioning—sorry!" });
           }
         });
       }
