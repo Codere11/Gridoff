@@ -597,10 +597,10 @@ if (this.showTradeHUD && (event.target as HTMLElement).closest('.trade-slot')) {
       // Map directions to quadrants:
       switch (npc.direction) {
         case 'left':
-          backgroundPosition = '0px 0px';                          // Top-left quadrant (moving left)
+          backgroundPosition = `-${displaySize}px 0px`;                          // Top-left quadrant (moving left)
           break;
         case 'right':
-          backgroundPosition = `-${displaySize}px 0px`;            // Top-right quadrant (moving right)
+          backgroundPosition = `0px 0px`;            // Top-right quadrant (moving right)
           break;
         case 'up':
           backgroundPosition = `0px -${displaySize}px`;            // Bottom-left quadrant (moving up)

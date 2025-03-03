@@ -71,28 +71,28 @@ export class NpcService {
   spawnVillagersForHouses(): void {
     this.gameState.houseCoordinates.forEach((coord, index) => {
       if (index % 10 === 0) {
-        this.spawnNpc({
+        const spawnedNpc = this.spawnNpc({
           type: 'villager',
-          name: 'Villager',
           x: coord.x,
           y: coord.y,
           direction: 'right',
           animationFrame: 0,
           health: 100
         });
+        console.log('Villager spawned:', spawnedNpc); // Debug
       }
     });
   }
   
-  spawnNpc(initial: Partial<NPC>): void {
+  spawnNpc(initial: Partial<NPC>): NPC {
     const npc: NPC = {
       id: Date.now() + Math.floor(Math.random() * 1000),
       type: initial.type || 'villager',
-      name: initial.name || (() => {
+      name: (() => {
         const defaultType = initial.type || 'NPC';
         const firstName = this.namePool[Math.floor(Math.random() * this.namePool.length)];
         return `${firstName} - ${defaultType.charAt(0).toUpperCase() + defaultType.slice(1)}`;
-      })(),
+      })(), // Force random name generation, ignore initial.name
       x: initial.x ?? 20,
       y: initial.y ?? 20,
       direction: initial.direction || 'right',
@@ -101,7 +101,8 @@ export class NpcService {
       ...initial
     };
     this.npcs.push(npc);
-    console.log('NPC spawned:', npc);
+    console.log('NPC spawned in spawnNpc:', npc); // Debug
+    return npc;
   }
 
   updateNpcs(): void {
@@ -145,7 +146,7 @@ export class NpcService {
     const renderDistance = 10;
     const playerX = this.gameState.player.x;
     const playerY = this.gameState.player.y;
-    
+  
     this.gameState.houseCoordinates.forEach((house, index) => {
       if (index % 10 !== 0) return;
       if (this._processedHouseIndices.has(index)) return;
@@ -160,9 +161,10 @@ export class NpcService {
           Math.abs(npc.y - house.y) < 0.5
         );
         if (!alreadySpawned) {
+          const firstName = this.namePool[Math.floor(Math.random() * this.namePool.length)];
           this.spawnNpc({
             type: 'villager',
-            name: 'Villager',
+            name: `${firstName} - Villager`, // Use random name
             x: house.x,
             y: house.y,
             direction: 'right',
