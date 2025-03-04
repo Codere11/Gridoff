@@ -75,6 +75,7 @@ export class MapComponent implements OnInit {
   lastPlayerZone: number = -1;
   zoneMessage: string = "";
   zoneMessageTimeout: any;
+  selectedNPC: NPC | null = null
 
   // Map of faction IDs to names (adjust names as desired)
   factionNames = ["AK Faction", "Coin Faction", "Sword Faction", "Tobacco Faction", "Wolf Faction"];
@@ -133,6 +134,7 @@ export class MapComponent implements OnInit {
     });
     this.npcService.spawnWarlords();
     this.npcService.spawnSoldiersAtTents();
+    setInterval(() => this.sendNPCUpdate(), 2000);
   }
 
   showZoneMessage(message: string) {
@@ -912,29 +914,100 @@ getPlayerHealthStyle(): any {
 }
 
   // For example, we simulate an NPC reply.
+
+  sendNPCUpdate() {
+    const playerX = this.gameState.player.x;
+    const playerY = this.gameState.player.y;
+    const chatRange = 15 * this.tileSize;
+    const nearbyNPCs = this.npcService.npcs.filter(npc => {
+      const dx = npc.x - playerX;
+      const dy = npc.y - playerY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return distance <= chatRange;
+    });
+    this.http.post('http://localhost:5000/update_npcs', {
+      nearbyNPCs: nearbyNPCs.map(npc => ({
+        name: npc.name || '',
+        type: npc.type,
+        x: npc.x,
+        y: npc.y,
+        health: npc.health || 100,
+        faction: npc.faction || 0
+      }))
+    }).subscribe({
+      next: (response) => {
+        console.log('NPC update sent:', response);
+      },
+      error: (err) => {
+        console.error('Error sending NPC update:', err.message);
+      }
+    });
+  }
+
+  toggleChatSelection(npc: NPC, event: MouseEvent): void {
+    event.stopPropagation(); // Prevent trade menu trigger
+    if (this.selectedNPC === npc) {
+      this.selectedNPC = null; // Unselect
+      console.log('Unselected NPC:', npc.name);
+    } else {
+      this.selectedNPC = npc; // Select
+      console.log('Selected NPC:', npc.name);
+    }
+  }
+
   sendChatMessage(): void {
     if (this.chatInput.trim().length > 0) {
       this.chatMessages.push({ sender: 'Player', text: this.chatInput });
       if (this.npcService.npcs.length > 0) {
-        const randomNPC = this.npcService.npcs[Math.floor(Math.random() * this.npcService.npcs.length)];
-        const npcType = randomNPC.type;
-        const npcName = randomNPC.name || (npcType.charAt(0).toUpperCase() + npcType.slice(1));
-        const npcTypeFormatted = npcType.charAt(0).toUpperCase() + npcType.slice(1);
-        this.http.post('http://localhost:5000/chat', {
-          npcType: npcTypeFormatted,
-          userInput: this.chatInput
-        }).subscribe({
-          next: (response: any) => {
-            this.chatMessages.push({ sender: npcName, text: response.reply });
-          },
-          error: (err) => {
-            console.error(`Error: ${err.message}`);
-            this.chatMessages.push({ sender: npcName, text: "I’m malfunctioning—sorry!" });
-          }
+        const playerX = this.gameState.player.x;
+        const playerY = this.gameState.player.y;
+        const chatRange = 15 * this.tileSize;
+        const nearbyNPCs = this.npcService.npcs.filter(npc => {
+          const dx = npc.x - playerX;
+          const dy = npc.y - playerY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          return distance <= chatRange;
         });
+
+        if (nearbyNPCs.length > 0) {
+          if (this.selectedNPC && nearbyNPCs.some(npc => npc === this.selectedNPC)) {
+            const message = this.chatInput.trim();
+            this.http.post('http://localhost:5000/chat', {
+              userInput: message,
+              targetNPC: {
+                name: this.selectedNPC.name || '',
+                type: this.selectedNPC.type,
+                x: this.selectedNPC.x,
+                y: this.selectedNPC.y,
+                health: this.selectedNPC.health || 100,
+                faction: this.selectedNPC.faction || 0
+              }
+            }).subscribe({
+              next: (response: any) => {
+                if (response.sender && response.reply) {
+                  this.chatMessages.push({ sender: response.sender, text: response.reply });
+                } else {
+                  this.chatMessages.push({ sender: 'System', text: 'No valid response from NPC!' });
+                }
+              },
+              error: (err) => {
+                console.error(`Error: ${err.message}`);
+                this.chatMessages.push({ sender: 'System', text: "I’m malfunctioning—sorry!" });
+              }
+            });
+          } else {
+            this.chatMessages.push({ sender: 'System', text: 'No NPC selected! Click the chat icon on an NPC to start a conversation.' });
+          }
+        } else {
+          this.chatMessages.push({ sender: 'System', text: 'No NPCs are close enough to chat with!' });
+        }
       }
       this.chatInput = "";
     }
+  }
+
+  getChatIconSrc(npc: NPC): string {
+    return this.selectedNPC === npc ? '../../assets/icons/chat-icon-black.png' : '../../assets/icons/chat-icon.png';
   }
 }
 

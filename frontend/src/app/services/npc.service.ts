@@ -108,7 +108,7 @@ export class NpcService {
   updateNpcs(): void {
     this._frameCounter++;
     // Update NPCs every 28 frames.
-    if (this._frameCounter % 28 !== 0) return;
+    if (this._frameCounter % 50 !== 0) return;
     
     const directions = ['left', 'right', 'up', 'down', 'none'];
     const movement = 0.5;

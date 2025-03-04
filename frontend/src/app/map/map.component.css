@@ -336,3 +336,23 @@
     white-space: nowrap;
     z-index: 100;
   }
+
+  /* ... (existing styles) */
+
+  .chat-icon {
+    position: absolute;
+    top: -125px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 75px;
+    height: 75px;
+    z-index: 101;
+    cursor: pointer;
+  }
+  
+  .chat-icon-selected {
+    background-color: black;
+    border-radius: 50%; /* Makes it round */
+    padding: 2px; /* Optional: Adjust to fit the icon */
+    background-size: 150px;
+  }

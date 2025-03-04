@@ -7,15 +7,27 @@
            [ngStyle]="getTileStyle(cameraX + colIndex, cameraY + rowIndex)">
       </div>
   
-      <div *ngFor="let npc of npcService.npcs" class="npc-container" [ngStyle]="getNpcContainerStyle(npc)" (click)="onNpcClick(npc, $event)">
-        <div class="npc-name">{{ npc.name || (npc.type.charAt(0).toUpperCase() + npc.type.slice(1)) }}</div>
+      <div *ngFor="let npc of npcService.npcs" 
+           class="npc-container" 
+           [ngStyle]="getNpcContainerStyle(npc)" 
+           (click)="onNpcClick(npc, $event)">
+        <div class="npc-name" *ngIf="npc.name">{{ npc.name }}</div>
         <div class="npc-health-bar">
           <div class="npc-health-bar-inner" [ngStyle]="getNpcHealthStyle(npc)"></div>
         </div>
         <div class="npc" [ngStyle]="getNpcStyle(npc)"></div>
+        <img [ngClass]="{'chat-icon-selected': selectedNPC === npc}" 
+             src="../../assets/icons/chat-icon.png" 
+             class="chat-icon" 
+             alt="Chat with NPC" 
+             (click)="toggleChatSelection(npc, $event); $event.stopPropagation()" />
       </div>
     </div>
   </div>
+  
+  <!-- ... (rest of the template like chat-input, chat-messages, etc.) -->
+  
+  <!-- ... (rest of the template) -->
 
   <!-- Chat Input: Fixed at the top center -->
   <div class="chat-input-container">
