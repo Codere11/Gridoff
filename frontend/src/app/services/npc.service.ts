@@ -99,7 +99,6 @@ export class NpcService {
       ...initial
     };
     this.npcs.push(npc);
-    console.log('NPC spawned in spawnNpc:', npc);
     return npc;
   }
 
@@ -117,9 +116,7 @@ export class NpcService {
         });
         this._processedHouseIndices.add(index);
         if (this.npcs.length > 0) {
-          console.log('Villager spawned:', this.npcs[this.npcs.length - 1]);
         } else {
-          console.warn('No NPCs spawned unexpectedly.');
         }
       }
     });
@@ -195,7 +192,6 @@ export class NpcService {
               health: 100,
               faction: tent.faction
             });
-            console.log(`Spawned soldier ${i + 1} at (${tent.x + (i - (soldierCount - 1) / 2) * 0.3}, ${tent.y}) for faction ${tent.faction}`);
           }
           this._processedTentIndices.add(index);
         }
@@ -347,7 +343,6 @@ export class NpcService {
           !(npc.smugglerState instanceof GunsellerTradingState) &&
           !(npc.smugglerState instanceof CombatState)) {
         npc.smugglerState = new TradingState();
-        console.log("Smuggler has 50 tobacco; transitioning to TradingState.");
       }
       npc.smugglerState.update(npc, this, data);
       return;
@@ -482,11 +477,9 @@ export class NpcService {
       if (currentTile.type === 'grass') {
         service.gameState.map[tileY][tileX] = { type: 'farmland', growthStage: 0 };
         data.transformedCount++;
-        console.log(`Smuggler transformed grass at (${tileX}, ${tileY}) to farmland. Count: ${data.transformedCount}`);
         if (data.transformedCount >= 10) {
           npc.smugglerState = new FarmlandToTobaccoState();
           data.transformedCount = 0;
-          console.log("Maximum 10 tiles reached; switching phase to farmland-to-tobacco.");
         }
         return;
       }
@@ -511,22 +504,18 @@ export class NpcService {
       if (grownTobacco) {
         data.targetTobacco = grownTobacco;
         npc.smugglerState = new HarvestingState();
-        console.log(`Detected fully grown tobacco at (${grownTobacco.x}, ${grownTobacco.y}); switching to harvesting.`);
         return;
       }
       if (currentTile.type === 'farmland') {
         service.gameState.map[tileY][tileX] = { type: 'tobacco-1', growthStage: 1 };
-        console.log(`Smuggler planted tobacco at (${tileX}, ${tileY}).`);
         setTimeout(() => {
           if (service.gameState.map[tileY] && service.gameState.map[tileY][tileX].type === 'tobacco-1') {
             service.gameState.map[tileY][tileX] = { type: 'tobacco-2', growthStage: 2 };
-            console.log(`Tobacco at (${tileX}, ${tileY}) grew to tobacco-2.`);
           }
         }, 10000);
         setTimeout(() => {
           if (service.gameState.map[tileY] && service.gameState.map[tileY][tileX].type === 'tobacco-2') {
             service.gameState.map[tileY][tileX] = { type: 'tobacco-3', growthStage: 3 };
-            console.log(`Tobacco at (${tileX}, ${tileY}) grew to tobacco-3.`);
           }
         }, 20000);
         return;
@@ -551,13 +540,11 @@ export class NpcService {
       if (currentTile.type === 'tobacco-3') {
         const yieldAmount = Math.floor(Math.random() * 3) + 3; // 3–5 tobacco
         data.inventory.tobacco += yieldAmount;
-        console.log(`Smuggler harvested ${yieldAmount} tobacco at (${tileX}, ${tileY}). Total: ${data.inventory.tobacco}`);
         service.gameState.map[tileY][tileX] = { type: 'farmland', growthStage: 0 };
         if (data.inventory.tobacco < 50) {
           npc.smugglerState = new FarmlandToTobaccoState();
         } else {
           npc.smugglerState = new TradingState();
-          console.log("Smuggler reached 50 tobacco; transitioning to TradingState.");
         }
         return;
       }
@@ -567,7 +554,6 @@ export class NpcService {
         service.moveNPCAlongPath(npc, tileX, tileY, target);
       } else {
         npc.smugglerState = new FarmlandToTobaccoState();
-        console.log("No fully grown tobacco found; resuming replanting.");
       }
     }
   }
@@ -592,7 +578,6 @@ export class NpcService {
         }
       }
       if (!targetVillager) {
-        console.log("No villager found for trading. Scanning...");
         service.moveRandomly(npc, Math.floor(smugglerX), Math.floor(smugglerY), service.gameState.worldSize);
         return;
       }
@@ -602,14 +587,12 @@ export class NpcService {
       const tradeThreshold = 1.0;
       if (distance > tradeThreshold) {
         service.moveNPCAlongPath(npc, Math.floor(smugglerX), Math.floor(smugglerY), { x: Math.floor(targetVillager.x), y: Math.floor(targetVillager.y) });
-        console.log("Approaching villager for trade...");
         return;
       }
       let totalCoins = 0;
       for (let i = 0; i < data.inventory.tobacco; i++) {
         totalCoins += Math.floor(Math.random() * 3) + 3; // 3–5 coins per tobacco
       }
-      console.log(`Traded ${data.inventory.tobacco} tobacco for ${totalCoins} coins.`);
       service.gameState.player.money += totalCoins;
       data.inventory.tobacco = 0;
       npc.smugglerState = new GunsellerTradingState();
@@ -636,7 +619,6 @@ export class NpcService {
         }
       }
       if (!targetGunseller) {
-        console.log("No gunseller found for trading. Scanning...");
         service.moveRandomly(npc, Math.floor(smugglerX), Math.floor(smugglerY), service.gameState.worldSize);
         return;
       }
@@ -646,12 +628,10 @@ export class NpcService {
       const tradeThreshold = 1.0;
       if (distance > tradeThreshold) {
         service.moveNPCAlongPath(npc, Math.floor(smugglerX), Math.floor(smugglerY), { x: Math.floor(targetGunseller.x), y: Math.floor(targetGunseller.y) });
-        console.log("Approaching gunseller for trade...");
         return;
       }
       const coins = service.gameState.player.money;
       if (coins <= 0) {
-        console.log("No coins to trade for ammo. Returning to farming cycle.");
         npc.smugglerState = new GrassToFarmlandState();
         return;
       }
@@ -659,12 +639,10 @@ export class NpcService {
       for (let i = 0; i < coins; i++) {
         totalAmmo += Math.floor(Math.random() * 3) + 3; // 3–5 ammo per coin
       }
-      console.log(`Traded ${coins} coins for ${totalAmmo} ammo.`);
       data.ammo += totalAmmo;
       service.gameState.player.money = 0;
       if (data.ammo >= 300) {
         npc.smugglerState = new CombatState();
-        console.log("Smuggler now has at least 300 ammo; transitioning to CombatState.");
       } else {
         npc.smugglerState = new GrassToFarmlandState();
       }
@@ -677,7 +655,6 @@ export class NpcService {
 
     update(npc: NPC, service: NpcService, data: SmugglerData): void {
       if (data.ammo < 300) {
-        console.log("Ammo dropped below 300; returning to farming cycle.");
         npc.smugglerState = new GrassToFarmlandState();
         return;
       }
@@ -692,12 +669,10 @@ export class NpcService {
           x: Math.floor(playerX),
           y: Math.floor(playerY)
         });
-        console.log("Smuggler moving towards player for combat.");
       } else {
         npc.direction = Math.abs(dx) > Math.abs(dy)
           ? (dx > 0 ? 'right' : 'left')
           : (dy > 0 ? 'down' : 'up');
-        console.log("Smuggler fires his AK at the player!");
         data.ammo--; // Consume one ammo per shot
         // Bullet spawning is handled by MapComponent's updateGameLoop
       }

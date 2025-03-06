@@ -65,7 +65,6 @@ export class GameStateService {
   // --- Player Actions ---
   equipItem(item: string) {
     this.currentItem = item;
-    console.log(this.currentItem)
   }
 
   movePlayer(dx: number, dy: number) {
@@ -74,7 +73,6 @@ export class GameStateService {
 
     const targetTile = this.map[Math.floor(newY)]?.[Math.floor(newX)];
     if (!targetTile ||  ['tree-tile', 'house-1'].includes(targetTile.type)) {
-      console.log('Movement blockes by terrain:', targetTile?.type)
       return;
     }
 
@@ -108,7 +106,6 @@ export class GameStateService {
   }
 
   updateTerritory(newTerritory: Territory) {
-    console.log('Emitting territory change:', newTerritory);
     this.territoryChanged.next(newTerritory);
   }
   
@@ -190,7 +187,6 @@ connectFactionRoadsSimple(): void {
       this.drawLine(hq.x, hq.y, building.x, building.y);
     }
   }
-  console.log("Faction connecting roads drawn.");
 }
 
 generateVillageClusters(): void {
@@ -290,10 +286,8 @@ assignFactionZones(): void {
       this.map[seed.y][seed.x].type = seed.hqType;
       (this.map[seed.y][seed.x] as any).faction = seed.faction;
       this.tentPositions.push({ faction: seed.faction, x: seed.x, y: seed.y });
-      console.log(`Set HQ at (${seed.x}, ${seed.y}) to ${seed.hqType}, faction ${seed.faction}`);
     }
   }
-  console.log("Faction zones and HQs assigned. tentPositions:", this.tentPositions.length);
 }
 
 assignTentPositions(): void {
@@ -312,13 +306,10 @@ assignTentPositions(): void {
         tile.type = 'tent';
         this.tentPositions.push({ faction, x, y });
         tentsPlaced++;
-        console.log(`Placed tent for faction ${faction} at (${x}, ${y})`);
       }
       attempts++;
     }
-    console.log(`Faction ${faction}: placed ${tentsPlaced} tents`);
   }
-  console.log("Tent positions assigned:", this.tentPositions.length);
 }
 
   /**
@@ -369,7 +360,6 @@ assignTentPositions(): void {
         this.gunsellerTableCoordinates.push({ x, y });
       }
     }
-    console.log('Generated gunseller tables:', this.gunsellerTableCoordinates.length);
   }  
 
   generateTobaccoTables(): void {
@@ -393,7 +383,6 @@ assignTentPositions(): void {
         }
       }
     }
-    console.log('Generated tobacco table tiles:', this.tobaccoTableCoordinates.length);
   }
 
 

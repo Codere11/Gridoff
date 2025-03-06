@@ -936,7 +936,6 @@ getPlayerHealthStyle(): any {
       }))
     }).subscribe({
       next: (response) => {
-        console.log('NPC update sent:', response);
       },
       error: (err) => {
         console.error('Error sending NPC update:', err.message);
@@ -991,7 +990,6 @@ getPlayerHealthStyle(): any {
                 }
               },
               error: (err) => {
-                console.error(`Error: ${err.message}`);
                 this.chatMessages.push({ sender: 'System', text: "I’m malfunctioning—sorry!" });
               }
             });

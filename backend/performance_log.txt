@@ -1,0 +1,345 @@
+2025-03-06 18:42:45,515 - === Application Started ===
+2025-03-06 18:42:45,515 - Log file created at: /home/maksich/Documents/GridOff/backend/performance_log.txt
+2025-03-06 18:42:46,235 - Model loaded in 0.72 seconds
+2025-03-06 18:42:46,305 - System: Linux 6.8.0-52-generic
+2025-03-06 18:42:46,306 - CPU: x86_64
+2025-03-06 18:42:46,306 - Memory: 62.5 GB total, 55.1 GB available
+2025-03-06 18:42:46,306 - Cleanup: NPCs 0->0, Cache 0->0, Cache hits: 0, misses: 0, Hit rate: N/A
+2025-03-06 18:42:46,308 - Starting Flask server on port 5000
+2025-03-06 18:42:46,425 - NPC created: Albert - Villager, Type: villager
+2025-03-06 18:42:46,426 - NPC created: Zdravko - Warlord, Type: warlord
+2025-03-06 18:42:46,426 - NPC created: Andrej - Villager, Type: villager
+2025-03-06 18:42:46,426 - NPC created: Albert - Smuggler, Type: smuggler
+2025-03-06 18:42:46,426 - NPC created: Janez - Soldier, Type: soldier
+2025-03-06 18:42:46,426 - NPC created: Janez - Villager, Type: villager
+2025-03-06 18:42:46,426 - NPC created: Maks - Smuggler, Type: smuggler
+2025-03-06 18:42:46,426 - NPC created: Albert - Soldier, Type: soldier
+2025-03-06 18:42:46,426 - NPC created: Charles - Villager, Type: villager
+2025-03-06 18:42:46,427 - NPC created: Arnold - Villager, Type: villager
+2025-03-06 18:42:46,427 - NPC created: Zdravko - Soldier, Type: soldier
+2025-03-06 18:42:46,427 - NPC created: Marko - Soldier, Type: soldier
+2025-03-06 18:42:46,427 - NPC created: Oliver - Soldier, Type: soldier
+2025-03-06 18:42:46,427 - NPC created: Yuri - Warlord, Type: warlord
+2025-03-06 18:42:46,427 - NPC created: Charles - Warlord, Type: warlord
+2025-03-06 18:42:46,427 - NPC created: Arnold - Warlord, Type: warlord
+2025-03-06 18:42:46,427 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:42:48,445 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:42:50,461 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:42:52,477 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:42:54,490 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:42:56,508 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:42:58,597 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:00,615 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:02,630 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:04,651 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:06,665 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:08,684 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:10,687 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:12,699 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:14,718 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:16,738 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:23,221 - NPC created: Viktor - Warlord, Type: warlord
+2025-03-06 18:43:23,222 - NPC created: Mason - Soldier, Type: soldier
+2025-03-06 18:43:23,222 - NPC created: Mujo - Smuggler, Type: smuggler
+2025-03-06 18:43:23,222 - NPC created: Mason - Warlord, Type: warlord
+2025-03-06 18:43:23,222 - NPC created: Jaka - Villager, Type: villager
+2025-03-06 18:43:23,222 - NPC created: Viktor - Villager, Type: villager
+2025-03-06 18:43:23,222 - NPC created: Marko - Warlord, Type: warlord
+2025-03-06 18:43:23,222 - NPC created: Yuri - Smuggler, Type: smuggler
+2025-03-06 18:43:23,223 - NPC created: Mujo - Villager, Type: villager
+2025-03-06 18:43:23,223 - NPC created: Gun Trader, Type: gunSeller
+2025-03-06 18:43:23,223 - NPC created: Charles - Soldier, Type: soldier
+2025-03-06 18:43:23,223 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:26,153 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:28,168 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:30,176 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:43:32,174 - NPC created: Yuri - Villager, Type: villager
+2025-03-06 18:43:32,175 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:34,905 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:36,911 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:38,932 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:40,894 - Prompt for Charles - Warlord: 21 tokens
+2025-03-06 18:43:40,973 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:43,015 - update_npcs: 0.01s, 19 NPCs
+2025-03-06 18:43:44,989 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:46,990 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:49,155 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:51,205 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:53,198 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:55,374 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:57,435 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:43:59,624 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:01,575 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:03,609 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:05,619 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:07,637 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:07,695 - Inference for Charles - Warlord: 26.80s, Prompt: 21 tokens, Response: 17 tokens, Speed: 0.63 tokens/sec
+2025-03-06 18:44:07,696 - Chat endpoint: 26.80s for NPC: Charles - Warlord, Input: 'Hey...'
+2025-03-06 18:44:11,346 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:14,280 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:16,274 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:18,274 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:20,281 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:23,230 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:27,279 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:30,307 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:32,328 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:34,344 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:36,357 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:38,376 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:40,392 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:42,411 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:44,436 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:46,448 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:48,471 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:50,493 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:52,508 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:54,523 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:56,547 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:44:58,558 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:00,574 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:02,595 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:04,610 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:06,622 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:08,642 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:10,661 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:12,674 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:15,344 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:17,378 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:19,493 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:21,515 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:23,542 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:25,567 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:27,630 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:29,652 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:31,728 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:33,756 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:35,773 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:37,794 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:39,816 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:41,832 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:43,852 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:45,874 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:47,898 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:49,913 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:51,936 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:53,950 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:55,966 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:45:57,990 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:00,003 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:02,018 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:04,040 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:06,054 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:08,074 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:10,107 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:12,126 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:14,138 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:16,164 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:18,177 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:20,196 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:22,219 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:24,234 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:26,256 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:28,277 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:30,290 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:32,308 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:34,333 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:36,351 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:38,374 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:40,403 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:42,425 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:44,444 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:46,471 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:48,487 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:50,499 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:52,526 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:54,544 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:56,559 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:46:58,580 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:00,594 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:02,609 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:04,631 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:06,644 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:08,660 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:10,682 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:12,697 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:14,711 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:16,734 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:18,750 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:20,763 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:22,790 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:24,812 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:26,825 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:28,863 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:30,885 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:32,900 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:34,931 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:36,953 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:38,975 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:41,020 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:43,065 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:45,086 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:46,308 - Cleanup: NPCs 28->28, Cache 1->1, Cache hits: 0, misses: 1, Hit rate: 0.0%
+2025-03-06 18:47:47,114 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:49,129 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:51,141 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:53,161 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:55,182 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:57,198 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:47:59,217 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:48:01,231 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:48:03,244 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:48:05,265 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:48:07,280 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:48:09,299 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:48:11,334 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:48:13,348 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:48:15,362 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:48:17,381 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:48:19,394 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:33,084 - === Application Started ===
+2025-03-06 18:50:33,084 - Log file created at: /home/maksich/Documents/GridOff/backend/performance_log.txt
+2025-03-06 18:50:33,625 - Model loaded in 0.54 seconds
+2025-03-06 18:50:33,643 - System: Linux 6.8.0-52-generic
+2025-03-06 18:50:33,644 - CPU: x86_64
+2025-03-06 18:50:33,644 - Memory: 62.5 GB total, 55.5 GB available
+2025-03-06 18:50:33,644 - Cleanup: NPCs 0->0, Cache 0->0, Cache hits: 0, misses: 0, Hit rate: N/A
+2025-03-06 18:50:33,645 - Starting Flask server on port 5000
+2025-03-06 18:50:35,137 - NPC created: Viktor - Warlord, Type: warlord
+2025-03-06 18:50:35,137 - NPC created: Mason - Soldier, Type: soldier
+2025-03-06 18:50:35,137 - NPC created: Mujo - Smuggler, Type: smuggler
+2025-03-06 18:50:35,137 - NPC created: Mason - Warlord, Type: warlord
+2025-03-06 18:50:35,137 - NPC created: Jaka - Villager, Type: villager
+2025-03-06 18:50:35,137 - NPC created: Andrej - Villager, Type: villager
+2025-03-06 18:50:35,137 - NPC created: Viktor - Villager, Type: villager
+2025-03-06 18:50:35,137 - NPC created: Marko - Warlord, Type: warlord
+2025-03-06 18:50:35,137 - NPC created: Yuri - Smuggler, Type: smuggler
+2025-03-06 18:50:35,137 - NPC created: Mujo - Villager, Type: villager
+2025-03-06 18:50:35,138 - NPC created: Gun Trader, Type: gunSeller
+2025-03-06 18:50:35,138 - NPC created: Janez - Soldier, Type: soldier
+2025-03-06 18:50:35,138 - NPC created: Albert - Soldier, Type: soldier
+2025-03-06 18:50:35,138 - NPC created: Charles - Soldier, Type: soldier
+2025-03-06 18:50:35,138 - NPC created: Charles - Warlord, Type: warlord
+2025-03-06 18:50:35,138 - NPC created: Yuri - Warlord, Type: warlord
+2025-03-06 18:50:35,138 - NPC created: Yuri - Villager, Type: villager
+2025-03-06 18:50:35,138 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:37,151 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:39,165 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:41,196 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:43,213 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:45,228 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:47,249 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:49,264 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:51,304 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:53,337 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:55,329 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:57,343 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:50:59,383 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:51:01,368 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:51:03,413 - update_npcs: 0.00s, 19 NPCs
+2025-03-06 18:51:10,636 - NPC created: Luka - Soldier, Type: soldier
+2025-03-06 18:51:10,636 - NPC created: Matevz - Villager, Type: villager
+2025-03-06 18:51:10,636 - NPC created: Jaka - Smuggler, Type: smuggler
+2025-03-06 18:51:10,636 - NPC created: Mujo - Warlord, Type: warlord
+2025-03-06 18:51:10,636 - NPC created: Arnold - Villager, Type: villager
+2025-03-06 18:51:10,636 - NPC created: Marko - Villager, Type: villager
+2025-03-06 18:51:10,636 - NPC created: Yuri - Soldier, Type: soldier
+2025-03-06 18:51:10,636 - NPC created: Matevz - Warlord, Type: warlord
+2025-03-06 18:51:10,636 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:13,975 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:15,979 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:17,978 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:20,011 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:22,966 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:24,970 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:26,974 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:27,592 - Prompt for Jaka - Villager: 25 tokens
+2025-03-06 18:51:29,125 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:31,112 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:33,300 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:34,380 - Inference for Jaka - Villager: 6.79s, Prompt: 25 tokens, Response: 3 tokens, Speed: 0.44 tokens/sec
+2025-03-06 18:51:34,380 - Chat endpoint: 6.79s for NPC: Jaka - Villager, Input: 'Hey! What is your role...'
+2025-03-06 18:51:35,306 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:37,318 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:39,351 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:41,368 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:43,376 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:46,963 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:52,017 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:51:56,068 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:00,117 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:02,247 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:04,375 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:06,462 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:08,630 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:10,655 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:12,735 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:14,756 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:16,777 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:18,801 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:20,831 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:22,846 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:24,867 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:26,886 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:28,903 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:30,931 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:32,947 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:34,964 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:36,998 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:39,016 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:41,033 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:43,055 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:45,071 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:47,085 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:49,108 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:51,124 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:53,140 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:55,162 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:57,174 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:52:59,188 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:01,220 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:03,243 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:05,250 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:07,364 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:09,252 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:11,254 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:13,265 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:15,260 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:17,195 - Prompt for Jaka - Villager: 35 tokens
+2025-03-06 18:53:17,282 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:19,453 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:21,623 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:23,686 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:25,937 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:27,963 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:30,003 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:30,269 - Inference for Jaka - Villager: 13.07s, Prompt: 35 tokens, Response: 0 tokens, Speed: 0.00 tokens/sec
+2025-03-06 18:53:30,276 - Chat endpoint: 13.08s for NPC: Jaka - Villager, Input: 'Yes, what is your role in this...'
+2025-03-06 18:53:32,029 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:35,101 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:39,228 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:43,257 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:47,298 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:51,340 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:55,396 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:57,418 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:53:59,444 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:01,464 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:03,478 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:05,496 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:07,518 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:09,533 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:11,551 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:13,575 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:15,592 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:17,610 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:19,637 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:21,659 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:23,687 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:25,723 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:27,761 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:29,780 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:31,803 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:33,819 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:35,834 - update_npcs: 0.00s, 18 NPCs
+2025-03-06 18:54:37,854 - update_npcs: 0.00s, 18 NPCs
